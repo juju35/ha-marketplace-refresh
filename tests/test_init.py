@@ -16,7 +16,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from pytest_homeassistant_custom_component.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from custom_components.marketplace_refresh.const import CARD_URL, CONF_SCAN_INTERVAL, DOMAIN
 
@@ -980,3 +984,63 @@ async def test_unload_during_installs_leaves_no_scheduled_check(hass, fake_marke
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     repo.update_repository.assert_not_awaited()
+
+
+async def test_updates_found_event_only_when_updates_appear(hass, fake_marketplace, hass_storage):
+    """The first check only records the updates; later ones fire for the updates that are new."""
+    events = async_capture_events(hass, "marketplace_refresh_updates_found")
+    entry = await _setup(hass)
+
+    async def check() -> None:
+        await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
+        await hass.async_block_till_done()
+
+    await check()
+    assert events == []
+    assert hass_storage[DOMAIN]["data"]["pending"] == ["juju35/ha-parcel"]
+
+    repos = fake_marketplace.repositories.list_installed
+    repos[0].pending_update = True  # juju35/ha-git-sync
+    await check()
+    assert len(events) == 1
+    assert events[0].data == {
+        "entry_id": entry.entry_id,
+        "count": 1,
+        "updates": ["juju35/ha-git-sync"],
+        "total": 2,
+    }
+
+    # Same updates: nothing new. One installed: the set shrinks, still nothing.
+    await check()
+    repos[1].pending_update = False
+    await check()
+    assert len(events) == 1
+
+    # It comes back: new again.
+    repos[1].pending_update = True
+    await check()
+    assert len(events) == 2
+    assert events[1].data["updates"] == ["juju35/ha-parcel"]
+    assert events[1].data["count"] == 1
+    assert events[1].data["total"] == 2
+
+
+async def test_updates_found_event_not_fired_for_updates_known_before_restart(hass, fake_marketplace, hass_storage):
+    events = async_capture_events(hass, "marketplace_refresh_updates_found")
+    hass_storage[DOMAIN] = {"version": 1, "key": DOMAIN, "data": {"updates": 1, "pending": ["juju35/ha-parcel"]}}
+    await _setup(hass)
+    await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
+    await hass.async_block_till_done()
+    assert events == []
+
+
+async def test_updates_found_event_not_fired_when_check_fails(hass, fake_marketplace, hass_storage):
+    events = async_capture_events(hass, "marketplace_refresh_updates_found")
+    hass_storage[DOMAIN] = {"version": 1, "key": DOMAIN, "data": {"updates": 0, "pending": []}}
+    fake_marketplace.async_get_all_category_repositories.side_effect = RuntimeError("catalog down")
+    await _setup(hass)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
+    await hass.async_block_till_done()
+    assert events == []
+    assert hass_storage[DOMAIN]["data"]["pending"] == []

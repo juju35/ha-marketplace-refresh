@@ -26,6 +26,10 @@ custom_components/marketplace_refresh/
 │                    #   `install_failed` on the status sensor; a second install → ServiceValidationError(install_running)
 │                    #   while installing, async_start → ServiceValidationError(check_while_installing); the scheduler skips
 │                    #   and `on_install_done` (not called on unload) reschedules, so a check due meanwhile runs after the installs
+│                    #   event marketplace_refresh_updates_found (entry_id, count, updates = new owner/repo, total) at the end of a
+│                    #   successful full check when `pending` (repos with an update, stored) gains names; no event when the
+│                    #   stored list is missing (first check / upgrade) — check_repository never fires it
+├── diagnostics.py   # entry data/options, refresher state, Marketplace summary, through async_redact_data (TO_REDACT)
 ├── config_flow.py   # Single entry, aborts without the `marketplace` component; options: scan_interval (hours, 0 = off)
 ├── button.py        # button.*_check_for_updates (unavailable while a check runs or updates are installed)
 ├── sensor.py        # status (enum idle/running/error + done/total/updates/failed/error), last_check (+ scan_interval/next_check)

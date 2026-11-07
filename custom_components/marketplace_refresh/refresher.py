@@ -39,7 +39,15 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, MARKETPLACE_DOMAIN, PARALLEL_REFRESHES, STATE_ERROR, STATE_IDLE, STATE_RUNNING
+from .const import (
+    DOMAIN,
+    EVENT_UPDATES_FOUND,
+    MARKETPLACE_DOMAIN,
+    PARALLEL_REFRESHES,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_RUNNING,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,6 +146,9 @@ class MarketplaceRefresher:
         self.done = 0
         self.total = 0
         self.updates: int | None = None
+        # Repositories with an update at the last full check (full names), to tell new updates apart;
+        # None before the first check, which only records them.
+        self.pending: list[str] | None = None
         self.failed: list[str] = []
         self.error: str | None = None
         self.last_check: datetime | None = None
@@ -164,6 +175,7 @@ class MarketplaceRefresher:
         data = await self._store.async_load() or {}
         self.last_check = _parse(data.get("last_check"))
         self.updates = data.get("updates")
+        self.pending = data.get("pending")
         # Before the first check, the interval counts from the first setup.
         self.since = _parse(data.get("since"))
         if self.since is None:
@@ -176,6 +188,7 @@ class MarketplaceRefresher:
                 "since": self.since.isoformat() if self.since else None,
                 "last_check": self.last_check.isoformat() if self.last_check else None,
                 "updates": self.updates,
+                "pending": self.pending,
             }
         )
 
@@ -493,7 +506,9 @@ class MarketplaceRefresher:
             # The update entities only change when their coordinator says so.
             for coordinator in marketplace.coordinators.values():
                 coordinator.async_update_listeners()
-            self.updates = sum(1 for repo in repositories if getattr(repo, "pending_update", False))
+            pending = sorted(repo.data.full_name for repo in repositories if getattr(repo, "pending_update", False))
+            self.updates = len(pending)
+            self._fire_updates_found(pending)
             self.state = STATE_IDLE
             _LOGGER.info(
                 "Marketplace check done: %s update(s) available, %s repository(ies) failed",
@@ -510,6 +525,20 @@ class MarketplaceRefresher:
         await self._async_save()
         if self.on_done is not None:
             self.on_done()
+
+    @callback
+    def _fire_updates_found(self, pending: list[str]) -> None:
+        """Fire EVENT_UPDATES_FOUND when updates appeared since the last full check, and remember them."""
+        previous = self.pending
+        self.pending = pending
+        if previous is None:
+            return  # first check: nothing to compare with
+        new = [name for name in pending if name not in previous]
+        if new:
+            self.hass.bus.async_fire(
+                EVENT_UPDATES_FOUND,
+                {"entry_id": self.entry.entry_id, "count": len(new), "updates": new, "total": len(pending)},
+            )
 
     async def _async_refresh_from_github(self, repositories: list[Any]) -> None:
         """Fetch every repository again from GitHub, a few at a time, like the Marketplace's own refresh."""

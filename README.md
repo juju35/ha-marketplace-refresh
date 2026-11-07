@@ -27,6 +27,8 @@ The Marketplace itself reads its catalog every 6 hours, checks the repositories 
 - **`marketplace_refresh.check_repository`** action: checks only the repositories behind the Marketplace update entities you give, and waits for the result
 - **`marketplace_refresh.install_updates`** action and **Update all** button on the card: installs every update available (or the ones you give), one after the other, administrators only
 - **Automatic check** at the interval set in the integration options (24 hours by default, `0` to turn it off), counted from the last check and kept across restarts: an overdue check runs as soon as Home Assistant has started
+- **`marketplace_refresh_updates_found` event** when a check finds updates that the previous one didn't, for notifications and automations
+- **Diagnostics** to download from the integration page, secrets redacted
 - **Status** sensor (`idle`, `running`, `error`) with the progress (`done` / `total`), the number of updates found and the repositories that failed
 - **Last check** sensor (timestamp), with the check interval and when the next automatic check is due
 - **Lovelace card** bundled with the integration: status and progress, last and next check, the updates available and the repositories that couldn't be checked
@@ -131,6 +133,30 @@ data:
   wait: true
 ```
 
+### Event `marketplace_refresh_updates_found`
+
+Fired at the end of a full check (button, `check_updates` or automatic) when updates are available that the previous full check didn't find: only when the set of repositories with an update grows, not when it stays the same or shrinks (an update installed, then found again later, fires again). The first check after installing the integration only records the updates available; the list is kept across restarts. `check_repository` doesn't fire it.
+
+| Data | Description |
+|---|---|
+| `entry_id` | Config entry of Marketplace Refresh |
+| `count` | Number of new updates |
+| `updates` | The new updates, as `owner/repo` |
+| `total` | Number of updates available, new or not |
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: marketplace_refresh_updates_found
+actions:
+  - action: notify.mobile_app_phone
+    data:
+      title: "Marketplace"
+      message: >-
+        {{ trigger.event.data.count }} new update(s): {{ trigger.event.data.updates | join(', ') }}
+        ({{ trigger.event.data.total }} available)
+```
+
 ## Card
 
 The integration serves the **Marketplace Refresh Card** and adds it to the dashboard resources (or loads it on every page when the resources are managed in YAML): no separate install. Add it from the card picker, or:
@@ -180,6 +206,8 @@ Without a GitHub account connected, the Marketplace runs on GitHub's anonymous l
 This relies on the Marketplace manager (the `runtime_data` of its config entry), as the Marketplace's own websocket commands do. The integration checks that the attributes it needs exist: if a future Home Assistant version changes them, the action fails with a clear message instead of breaking Home Assistant.
 
 Checks go through the Marketplace's GitHub client, so they count towards its GitHub API rate limit (5,000 requests per hour with a connected account).
+
+To report a problem, download the diagnostics from **Settings → Devices & services → Marketplace Refresh → ⋮ → Download diagnostics**: the options, the last check (status, updates, failures, installs) and the Marketplace's state, with tokens, passwords, usernames and URLs redacted.
 
 To debug:
 

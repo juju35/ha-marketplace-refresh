@@ -19,3 +19,4 @@ _.native_value  # unused property (custom_components/marketplace_refresh/sensor.
 _.extra_state_attributes  # unused property (custom_components/marketplace_refresh/sensor.py:39)
 _.native_value  # unused property (custom_components/marketplace_refresh/sensor.py:58)
 _.extra_state_attributes  # unused property (custom_components/marketplace_refresh/sensor.py:62)
+async_get_config_entry_diagnostics  # unused function (custom_components/marketplace_refresh/diagnostics.py)

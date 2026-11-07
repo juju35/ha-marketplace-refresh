@@ -6,7 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "marketplace_refresh"
 # Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
-VERSION: Final = "2.0.2"
+VERSION: Final = "2.1.0"
 MARKETPLACE_DOMAIN: Final = "marketplace"
 
 CONF_SCAN_INTERVAL: Final = "scan_interval"
@@ -21,6 +21,9 @@ PARALLEL_REFRESHES: Final = 4
 SERVICE_CHECK_UPDATES: Final = "check_updates"
 SERVICE_CHECK_REPOSITORY: Final = "check_repository"
 SERVICE_INSTALL_UPDATES: Final = "install_updates"
+
+# Fired when a full check finds updates that the previous one didn't.
+EVENT_UPDATES_FOUND: Final = f"{DOMAIN}_updates_found"
 
 STATE_IDLE: Final = "idle"
 STATE_RUNNING: Final = "running"
