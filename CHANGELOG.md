@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0 - 2026-11-07
+
+### What's new
+- Diagnostics: download them from the integration page to get the options, the last check, the installs and the Marketplace's state, with secrets redacted.
+- New `marketplace_refresh_updates_found` event, fired when a full check finds updates that the previous one didn't, with their number and their `owner/repo` names.
+
 ## 2.0.2 - 2026-11-07
 
 ### Fixes
