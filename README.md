@@ -26,7 +26,7 @@ The Marketplace itself reads its catalog every 6 hours, checks the repositories 
 - **Check for updates** button and `marketplace_refresh.check_updates` action: the catalog is read again, then every installed repository is fetched again from GitHub (with a GitHub account connected to the Marketplace), four at a time, and the Marketplace's update entities are refreshed
 - **`marketplace_refresh.check_repository`** action: checks only the repositories behind the Marketplace update entities you give, and waits for the result
 - **`marketplace_refresh.install_updates`** action and **Update all** button on the card: installs every update available (or the ones you give), one after the other, administrators only
-- **Automatic check** at the interval set in the integration options (24 hours by default, `0` to turn it off), counted from the last check and kept across restarts: an overdue check runs as soon as Home Assistant has started
+- **Automatic check** at the interval set in the integration options (24 hours by default, `0` to turn it off), counted from the last check and kept across restarts: an overdue check runs as soon as Home Assistant has started, and a check that failed (or couldn't start) is tried again within the hour
 - **`marketplace_refresh_updates_found` event** when a check finds updates that the previous one didn't, for notifications and automations
 - **Diagnostics** to download from the integration page, secrets redacted
 - **Status** sensor (`idle`, `running`, `error`) with the progress (`done` / `total`), the number of updates found and the repositories that failed
@@ -40,7 +40,7 @@ The Marketplace itself reads its catalog every 6 hours, checks the repositories 
 
 - Home Assistant 2026.11 or later (the Marketplace comes with it; on 2026.10 and older, use [HACS Refresh 1.0.x](https://github.com/juju35/ha-marketplace-refresh/releases/tag/v1.0.3), the previous name of this project, with HACS)
 - A GitHub account [connected to the Marketplace](https://www.home-assistant.io/integrations/marketplace/#connecting-github) to check the repositories from GitHub; without one, a check only reads the catalog and the repositories added from a link can't be checked (see [How it works](#how-it-works))
-- The button, `marketplace_refresh.check_updates` and `marketplace_refresh.check_repository` are open to every user: they only fetch information, like the Marketplace's own refresh. `marketplace_refresh.install_updates` installs code on the server and is for administrators only, like the Marketplace itself; it also needs the Marketplace warning to have been accepted once in **Settings → Marketplace**
+- The **Check for updates** button is open to every user: it only fetches information, like the Marketplace's own refresh, and never starts a second check while one runs. The actions `marketplace_refresh.check_updates` and `marketplace_refresh.check_repository` are for administrators only (automations and scripts run without a user and can still call them): each call asks GitHub again and spends the Marketplace's rate limit. `marketplace_refresh.install_updates` installs code on the server and is for administrators only too, like the Marketplace itself; it also needs the Marketplace warning to have been accepted once in **Settings → Marketplace**
 
 ## Installation
 

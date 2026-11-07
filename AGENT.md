@@ -7,10 +7,10 @@ Home Assistant custom integration that checks every repository installed from th
 
 ```
 custom_components/marketplace_refresh/
-├── __init__.py      # Static path + dashboard resource for the card; actions check_updates and check_repository (every user, like the button),
+├── __init__.py      # Static path + dashboard resource for the card; actions check_updates and check_repository (admin services: each call spends the GitHub rate limit; the button stays open),
 │                    #   install_updates (admin service), entry setup, automatic check
 │                    #   (async_call_later on last_check + interval; overdue → runs at async_at_started; skipped because the Marketplace
-│                    #   is unavailable → retried after min(interval, 1 h)); check_updates wait: true → raise_for_result()
+│                    #   is unavailable, or check ended in STATE_ERROR (on_done) → retried after min(interval, 1 h)); check_updates wait: true → raise_for_result()
 ├── refresher.py     # MarketplaceRefresher: runs the check (entry background task, cancelled on unload): catalog refresh
 │                    #   (`async_get_all_category_repositories`), then `update_repository(force=True)` on every installed repo only
 │                    #   when `github_connected` (else custom repos → `failed`, `github_connected` attribute False); keeps state/progress,
@@ -32,7 +32,7 @@ custom_components/marketplace_refresh/
 ├── diagnostics.py   # entry data/options, refresher state, Marketplace summary, through async_redact_data (TO_REDACT)
 ├── config_flow.py   # Single entry, aborts without the `marketplace` component; options: scan_interval (hours, 0 = off)
 ├── button.py        # button.*_check_for_updates (unavailable while a check runs or updates are installed)
-├── sensor.py        # status (enum idle/running/error + done/total/updates/failed/error), last_check (+ scan_interval/next_check)
+├── sensor.py        # status (enum idle/running/error + done/total/updates/failed/error; failed/checking/installing/install_failed unrecorded), last_check (+ scan_interval/next_check)
 ├── entity.py        # Shared service device, listener on MarketplaceRefresher
 ├── frontend/marketplace-refresh-card.js   # custom:marketplace-refresh-card: status sensor + last check + button, Marketplace update entities (platform marketplace, state on),
 │                                   #   "Update all (n)" for admins → confirmation at the top of the card → install_updates with the ids listed

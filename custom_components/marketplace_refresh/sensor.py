@@ -31,6 +31,8 @@ class StatusSensor(MarketplaceRefreshEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options: ClassVar[list[str]] = [STATE_IDLE, STATE_RUNNING, STATE_ERROR]
+    # Lists that change at every repository checked or installed: kept out of the recorder.
+    _unrecorded_attributes = frozenset({"failed", "checking", "installing", "install_failed"})
 
     @property
     def native_value(self) -> str:

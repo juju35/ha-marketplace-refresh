@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.0 - 2026-11-07
+
+### What's new
+- An automatic check that fails is tried again within the hour instead of a whole interval later.
+- The status sensor's `failed`, `checking`, `installing` and `install_failed` lists are no longer stored in the recorder, which saves database space.
+
+### Security
+- The `marketplace_refresh.check_updates` and `marketplace_refresh.check_repository` actions are now for administrators only, since each call spends the Marketplace's GitHub rate limit; automations and the **Check for updates** button still work for everyone.
+
 ## 2.1.0 - 2026-11-07
 
 ### What's new
