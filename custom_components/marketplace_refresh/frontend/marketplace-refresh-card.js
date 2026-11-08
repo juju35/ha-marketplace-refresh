@@ -4,7 +4,7 @@
  * Served and added to the dashboard resources by the integration.
  * https://github.com/juju35/ha-marketplace-refresh
  */
-var MARKETPLACE_REFRESH_CARD_VERSION = '2.2.0';
+var MARKETPLACE_REFRESH_CARD_VERSION = '2.2.1';
 
 const HR_I18N = {
   en: {
@@ -1350,12 +1350,13 @@ class MarketplaceRefreshCard extends HTMLElement {
 
     const a = st?.attributes || {};
     const running = st?.state === 'running';
-    const failed = Array.isArray(a.failed) ? a.failed : [];
+    // Without a GitHub account connected, the last check only read the catalog: the repositories added from a link
+    // are in `not_checked`, listed with the failed ones and explained once under them.
+    const notChecked = Array.isArray(a.not_checked) ? a.not_checked : [];
+    const failed = [...(Array.isArray(a.failed) ? a.failed : []), ...notChecked];
     const installing = Array.isArray(a.installing) ? a.installing : [];
     const installFailed = Array.isArray(a.install_failed) ? a.install_failed : [];
-    // Without a GitHub account connected, the last check only read the catalog: the repositories added from a link
-    // are in `failed` for that reason, which the card says once under them.
-    const noGithub = a.github_connected === false && failed.length > 0;
+    const noGithub = notChecked.length > 0;
     const error = st?.state === 'error' ? a.error || this._t('error') : null;
     // The update entities are the truth; the sensor's count is the fallback when the Marketplace's entities aren't there.
     const updates = updateStates

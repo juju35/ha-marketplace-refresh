@@ -10,10 +10,11 @@ custom_components/marketplace_refresh/
 ├── __init__.py      # Static path + dashboard resource for the card; actions check_updates and check_repository (admin services: each call spends the GitHub rate limit; the button stays open),
 │                    #   install_updates (admin service), entry setup, automatic check
 │                    #   (async_call_later on last_check + interval; overdue → runs at async_at_started; skipped because the Marketplace
-│                    #   is unavailable, or check ended in STATE_ERROR (on_done) → retried after min(interval, 1 h)); check_updates wait: true → raise_for_result()
+│                    #   is unavailable, or check ended in STATE_ERROR (on_done) → retried after min(interval, 1 h)); every time set is
+│                    #   `refresher.next_due` (stored, restored at start capped at last + interval, dropped when the interval changes) = sensor next_check; check_updates wait: true → raise_for_result()
 ├── refresher.py     # MarketplaceRefresher: runs the check (entry background task, cancelled on unload): catalog refresh
 │                    #   (`async_get_all_category_repositories`), then `update_repository(force=True)` on every installed repo only
-│                    #   when `github_connected` (else custom repos → `failed`, `github_connected` attribute False); keeps state/progress,
+│                    #   when `github_connected` (else custom repos → `not_checked`, `github_connected` attribute False); keeps state/progress,
 │                    #   notifies entities; Store `marketplace_refresh` keeps since/last_check/updates across restarts;
 │                    #   async_check_repositories: update entity → repository by unique_id (= repository id); waits for a running
 │                    #   full check (fails with its error / failed repos; repositories outside `common.categories` are checked after it); repositories already checked by another call: waits for
@@ -32,7 +33,7 @@ custom_components/marketplace_refresh/
 ├── diagnostics.py   # entry data/options, refresher state, Marketplace summary, through async_redact_data (TO_REDACT)
 ├── config_flow.py   # Single entry, aborts without the `marketplace` component; options: scan_interval (hours, 0 = off)
 ├── button.py        # button.*_check_for_updates (unavailable while a check runs or updates are installed)
-├── sensor.py        # status (enum idle/running/error + done/total/updates/failed/error; failed/checking/installing/install_failed unrecorded), last_check (+ scan_interval/next_check)
+├── sensor.py        # status (enum idle/running/error + done/total/updates/failed/error; failed/not_checked/checking/installing/install_failed unrecorded), last_check (+ scan_interval/next_check)
 ├── entity.py        # Shared service device, listener on MarketplaceRefresher
 ├── frontend/marketplace-refresh-card.js   # custom:marketplace-refresh-card: status sensor + last check + button, Marketplace update entities (platform marketplace, state on),
 │                                   #   "Update all (n)" for admins → confirmation at the top of the card → install_updates with the ids listed
@@ -41,7 +42,7 @@ custom_components/marketplace_refresh/
 
 ## Marketplace internals used (same as the `marketplace/repository/refresh` websocket command)
 - The manager is `hass.config_entries.async_loaded_entries("marketplace")[0].runtime_data` (`homeassistant.components.marketplace.base.MarketplaceManager`, single entry); never imported, read through `_loaded_marketplace()` (patched in tests). Attributes: `repositories.list_installed`, `repositories.is_default(id)` (False for a repo added from a link), `repository.update_repository(ignore_issues=True, force=True)`, `data.async_write()`, `coordinators[category].async_update_listeners()`, `system.disabled` / `disabled_reason`, `common.categories`, `github_connected`, `async_get_all_category_repositories()` (catalog, one request per category, no GitHub call).
-- Without `github_connected` the Marketplace is on GitHub's anonymous limit (60/h): a full check reads the catalog only and lists the custom repositories in `failed`; `check_repository` still calls `update_repository` (anonymous, like the Marketplace panel). `update.install` on a Marketplace entity fails with `warning_not_accepted` until an admin accepted the Marketplace warning.
+- Without `github_connected` the Marketplace is on GitHub's anonymous limit (60/h): a full check reads the catalog only and lists the custom repositories in `not_checked` (not a failure: `raise_for_result` ignores them, `check_repository` checks them itself even during a full check); `check_repository` still calls `update_repository` (anonymous, like the Marketplace panel). `update.install` on a Marketplace entity fails with `warning_not_accepted` until an admin accepted the Marketplace warning.
 - `_marketplace()` checks these exist and raises `MarketplaceNotAvailableError` with a clear message otherwise. Keep that check in sync if more attributes are used.
 - Error messages are translated: `translation_key` under `exceptions` in translations/{en,fr,de,es,sr,sr-Latn,it,nl,pt,pl,ro,da,sv,bg,ru,uk,hu,sk,cs,sl,lv,el}.json (no URL in the strings: hassfest refuses them, pass them as placeholders).
 - `homeassistant.update_entity` on Marketplace update entities is a no-op: don't rely on it.

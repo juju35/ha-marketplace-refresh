@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.1 - 2026-11-08
+
+### Fixes
+- After a failed or skipped automatic check, `next_check` now shows the retry within the hour instead of a whole interval later, and that retry is kept across a restart.
+- Without a GitHub account connected, `check_updates` with `wait: true` no longer fails for every repository added from a link: they are listed in the status sensor's new `not_checked` attribute instead of `failed`, and `check_repository` checks them itself.
+
 ## 2.2.0 - 2026-11-07
 
 ### What's new

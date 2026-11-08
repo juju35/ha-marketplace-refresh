@@ -94,9 +94,8 @@ async def test_check_updates_without_github_reads_the_catalog_only(hass, fake_ma
     custom = make_repo("someone/custom-card", category="plugin", custom=True)
     fake_marketplace.repositories.list_installed.append(custom)
     await _setup(hass)
-    # Waiting reports the repositories not checked, like the ones GitHub couldn't fetch.
-    with pytest.raises(HomeAssistantError, match="someone/custom-card"):
-        await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
+    # Not checked is not a failure: waiting doesn't fail for them, they are listed in `not_checked`.
+    await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
     await hass.async_block_till_done()
 
     fake_marketplace.async_get_all_category_repositories.assert_awaited_once()
@@ -111,7 +110,8 @@ async def test_check_updates_without_github_reads_the_catalog_only(hass, fake_ma
     assert state.attributes["done"] == 4
     assert state.attributes["total"] == 4
     assert state.attributes["updates"] == 1
-    assert state.attributes["failed"] == ["someone/custom-card"]
+    assert state.attributes["failed"] == []
+    assert state.attributes["not_checked"] == ["someone/custom-card"]
     assert state.attributes["github_connected"] is False
     assert "no GitHub account connected" in caplog.text
 
@@ -738,7 +738,7 @@ async def test_status_lists_not_recorded(hass, fake_marketplace):
     """The lists that change at every repository are kept out of the recorder."""
     await _setup(hass)
     unrecorded = hass.states.get(STATUS).state_info["unrecorded_attributes"]
-    assert {"failed", "checking", "installing", "install_failed"} <= unrecorded
+    assert {"failed", "not_checked", "checking", "installing", "install_failed"} <= unrecorded
     assert "updates" not in unrecorded
 
 
@@ -1084,3 +1084,95 @@ async def test_updates_found_event_not_fired_when_check_fails(hass, fake_marketp
     await hass.async_block_till_done()
     assert events == []
     assert hass_storage[DOMAIN]["data"]["pending"] == []
+
+
+async def test_check_updates_wait_without_github_still_fails_on_real_failures(hass, fake_marketplace):
+    """Without GitHub, the repositories not checked don't fail the action, a check that failed still does."""
+    fake_marketplace.github_connected = False
+    fake_marketplace.repositories.list_installed.append(make_repo("someone/custom-card", custom=True))
+    fake_marketplace.async_get_all_category_repositories.side_effect = RuntimeError("catalog down")
+    await _setup(hass, hours=0)
+    with pytest.raises(HomeAssistantError, match="catalog down"):
+        await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
+
+
+async def test_check_repository_during_full_check_without_github_checks_custom_itself(hass, fake_marketplace):
+    """A repository the full check could not check (no GitHub account) is checked by check_repository itself."""
+    release = asyncio.Event()
+
+    async def slow():
+        await release.wait()
+
+    fake_marketplace.github_connected = False
+    fake_marketplace.async_get_all_category_repositories.side_effect = slow
+    custom = make_repo("someone/custom-card", custom=True)
+    fake_marketplace.repositories.list_installed.append(custom)
+    entry = await _setup(hass, hours=0)
+    entity_id = _marketplace_update_entity(hass, custom)
+    assert entry.runtime_data.async_start()
+    await hass.async_block_till_done()
+    call = hass.async_create_task(
+        hass.services.async_call(DOMAIN, "check_repository", {"entity_id": entity_id}, blocking=True)
+    )
+    await asyncio.sleep(0.01)
+    release.set()
+    await _await_service(call)
+    custom.update_repository.assert_awaited_once_with(ignore_issues=True, force=True)
+
+
+async def test_next_check_after_failed_check_is_the_retry(hass, fake_marketplace, hass_storage, freezer):
+    """After a failed check, next_check is the retry within the hour, which a restart keeps."""
+    entry = await _setup(hass, hours=24)
+    repo = fake_marketplace.repositories.list_installed[0]
+    catalog = fake_marketplace.async_get_all_category_repositories
+    catalog.side_effect = RuntimeError("catalog down")
+    freezer.tick(timedelta(hours=24, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(STATUS).state == "error"
+    due = dt_util.parse_datetime(hass.states.get(LAST_CHECK).attributes["next_check"])
+    assert due == dt_util.utcnow() + timedelta(hours=1)
+    await hass.async_block_till_done()
+    assert hass_storage[DOMAIN]["data"]["next_due"] == due.isoformat()
+    # Restarted 10 minutes later: the retry stays 50 minutes away, not a whole interval.
+    catalog.side_effect = None
+    freezer.tick(timedelta(minutes=10))
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert dt_util.parse_datetime(hass.states.get(LAST_CHECK).attributes["next_check"]) == due
+    freezer.tick(timedelta(minutes=49))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    repo.update_repository.assert_not_awaited()
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await entry.runtime_data.async_wait()
+    repo.update_repository.assert_awaited_once()
+    # Back to the interval, shown as such.
+    state = hass.states.get(LAST_CHECK)
+    due = dt_util.parse_datetime(state.attributes["next_check"]).replace(microsecond=0)
+    assert due == dt_util.parse_datetime(state.state) + timedelta(hours=24)
+
+
+async def test_next_check_after_skipped_check_is_the_retry(hass, fake_marketplace, freezer):
+    """A scheduled check skipped because the Marketplace is disabled shows the retry as next_check."""
+    await _setup(hass, hours=24)
+    fake_marketplace.system.disabled = True
+    fake_marketplace.system.disabled_reason = "rate_limit"
+    freezer.tick(timedelta(hours=24, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    due = dt_util.parse_datetime(hass.states.get(LAST_CHECK).attributes["next_check"])
+    assert due == dt_util.utcnow() + timedelta(hours=1)
+
+
+async def test_new_interval_drops_the_time_set_before(hass, fake_marketplace, freezer):
+    """Changing the interval counts the next check from the last one, not from the time set with the old interval."""
+    entry = await _setup(hass, hours=24)
+    since = entry.runtime_data.since
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(result["flow_id"], {CONF_SCAN_INTERVAL: 48})
+    await hass.async_block_till_done()
+    due = dt_util.parse_datetime(hass.states.get(LAST_CHECK).attributes["next_check"])
+    assert due == since + timedelta(hours=48)
