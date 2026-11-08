@@ -280,13 +280,17 @@ async def test_unload_cancels_running_check(hass, fake_marketplace):
     release.set()
 
 
-async def test_check_updates_open_to_non_admin(hass, fake_marketplace, hass_read_only_user):
-    """Like the button, which runs the same check, the action is open to every user."""
-    await _setup(hass, hours=0)
-    await hass.services.async_call(
-        DOMAIN, "check_updates", {"wait": True}, blocking=True, context=Context(user_id=hass_read_only_user.id)
-    )
-    fake_marketplace.repositories.list_installed[0].update_repository.assert_awaited_once()
+@pytest.mark.parametrize(("service", "data"), [("check_updates", {}), ("check_repository", {"entity_id": "update.x"})])
+async def test_checks_admin_only(hass, fake_marketplace, hass_read_only_user, service, data):
+    """Each check asks GitHub again: a user who isn't an administrator can't call them."""
+    from homeassistant.exceptions import Unauthorized
+
+    await _setup(hass)
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN, service, data, blocking=True, context=Context(user_id=hass_read_only_user.id)
+        )
+    fake_marketplace.repositories.list_installed[0].update_repository.assert_not_awaited()
 
 
 async def test_marketplace_disabled_without_reason(hass, fake_marketplace):
@@ -700,6 +704,42 @@ async def test_skipped_scheduled_check_retried_within_the_hour(hass, fake_market
     await hass.async_block_till_done()
     await entry.runtime_data.async_wait()
     repo.update_repository.assert_awaited_once()
+
+
+async def test_failed_scheduled_check_retried_within_the_hour(hass, fake_marketplace, freezer):
+    """A scheduled check that ends in error is tried again after an hour, not a full interval later."""
+    entry = await _setup(hass, hours=24)
+    repo = fake_marketplace.repositories.list_installed[0]
+    catalog = fake_marketplace.async_get_all_category_repositories
+    catalog.side_effect = RuntimeError("catalog down")
+    freezer.tick(timedelta(hours=24, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(STATUS).state == "error"
+    catalog.side_effect = None
+    freezer.tick(timedelta(minutes=59))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    repo.update_repository.assert_not_awaited()
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await entry.runtime_data.async_wait()
+    repo.update_repository.assert_awaited_once()
+    assert hass.states.get(STATUS).state == "idle"
+    # Back to the interval once a check succeeded.
+    freezer.tick(timedelta(hours=1, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    repo.update_repository.assert_awaited_once()
+
+
+async def test_status_lists_not_recorded(hass, fake_marketplace):
+    """The lists that change at every repository are kept out of the recorder."""
+    await _setup(hass)
+    unrecorded = hass.states.get(STATUS).state_info["unrecorded_attributes"]
+    assert {"failed", "checking", "installing", "install_failed"} <= unrecorded
+    assert "updates" not in unrecorded
 
 
 async def test_marketplace_disabled_without_reason_has_no_placeholder(hass, fake_marketplace):

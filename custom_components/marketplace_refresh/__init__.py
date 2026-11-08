@@ -30,6 +30,7 @@ from .const import (
     SERVICE_CHECK_REPOSITORY,
     SERVICE_CHECK_UPDATES,
     SERVICE_INSTALL_UPDATES,
+    STATE_ERROR,
     VERSION,
 )
 from .refresher import STORAGE_VERSION, MarketplaceNotAvailableError, MarketplaceRefresher
@@ -39,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 ATTR_WAIT = "wait"
-# Delay before trying again a scheduled check skipped because the Marketplace couldn't be used.
+# Delay before trying again a scheduled check that failed or was skipped because the Marketplace couldn't be used.
 RETRY_INTERVAL = timedelta(hours=1)
 CHECK_UPDATES_SCHEMA = vol.Schema({vol.Optional(ATTR_WAIT, default=False): cv.boolean})
 CHECK_REPOSITORY_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
@@ -51,7 +52,7 @@ type MarketplaceRefreshConfigEntry = ConfigEntry[MarketplaceRefresher]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Serve the card, load it on every dashboard, and register the actions (checks: every user, like the button)."""
+    """Serve the card, load it on every dashboard, and register the actions (administrators only)."""
     await hass.http.async_register_static_paths(
         [StaticPathConfig(CARD_URL, str(Path(__file__).parent / "frontend" / "marketplace-refresh-card.js"), True)]
     )
@@ -83,7 +84,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # Like check_repository: fail when the check failed or could not check some repositories.
             refresher.raise_for_result()
 
-    hass.services.async_register(DOMAIN, SERVICE_CHECK_UPDATES, check_updates, CHECK_UPDATES_SCHEMA)
+    # Each call asks GitHub again for every repository: administrators only, so that any user can't spend
+    # the Marketplace's GitHub rate limit (the button, which starts at most one check at a time, stays open).
+    async_register_admin_service(hass, DOMAIN, SERVICE_CHECK_UPDATES, check_updates, CHECK_UPDATES_SCHEMA)
 
     async def check_repository(call: ServiceCall) -> None:
         try:
@@ -91,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except MarketplaceNotAvailableError as err:
             raise _validation_error(err) from err
 
-    hass.services.async_register(DOMAIN, SERVICE_CHECK_REPOSITORY, check_repository, CHECK_REPOSITORY_SCHEMA)
+    async_register_admin_service(hass, DOMAIN, SERVICE_CHECK_REPOSITORY, check_repository, CHECK_REPOSITORY_SCHEMA)
 
     async def install_updates(call: ServiceCall) -> None:
         refresher = loaded_refresher()
@@ -199,6 +202,14 @@ def _async_schedule(
     def schedule_next() -> None:
         schedule(remaining())
 
+    @callback
+    def on_done() -> None:
+        # A failed check (often temporary) is tried again within the hour, not a whole interval later.
+        if refresher.state == STATE_ERROR:
+            schedule(min(interval, RETRY_INTERVAL))
+        else:
+            schedule_next()
+
     async def run(_now: datetime) -> None:
         cancel.clear()
         # When a check is already running, its end (on_done) schedules the next one; when updates are
@@ -219,7 +230,7 @@ def _async_schedule(
         else:
             schedule_next()
 
-    refresher.on_done = schedule_next
+    refresher.on_done = on_done
     refresher.on_install_done = schedule_next
     entry.async_on_unload(cancel_timer)
     entry.async_on_unload(async_at_started(hass, at_started))
