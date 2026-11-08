@@ -322,13 +322,15 @@ test('failed repositories and a failed check', () => {
 });
 
 test('without a GitHub account connected, the repositories not checked say why, once', () => {
-  const out = html(render({}, makeHass({ updates: [], attrs: { failed: ['someone/custom', 'other/custom'], github_connected: false } })));
+  const out = html(render({}, makeHass({ updates: [], attrs: { failed: ['someone/broken'], not_checked: ['someone/custom', 'other/custom'], github_connected: false } })));
   assert.match(out, /someone\/custom/);
+  assert.match(out, /someone\/broken/);
+  assert.match(out, /3 failed/);
   assert.equal((out.match(/GitHub isn’t connected to the Marketplace/g) || []).length, 1);
-  // Connected, or nothing failed: no such line.
-  assert.doesNotMatch(html(render({}, makeHass({ updates: [], attrs: { failed: ['someone/custom'], github_connected: true } }))), /GitHub isn’t connected/);
-  assert.doesNotMatch(html(render({}, makeHass({ updates: [], attrs: { failed: [], github_connected: false } }))), /GitHub isn’t connected/);
-  assert.doesNotMatch(html(render({ show_failed: false }, makeHass({ updates: [], attrs: { failed: ['x'], github_connected: false } }))), /GitHub isn’t connected/);
+  // Only failures, or nothing at all: no such line.
+  assert.doesNotMatch(html(render({}, makeHass({ updates: [], attrs: { failed: ['someone/custom'], github_connected: false } }))), /GitHub isn’t connected/);
+  assert.doesNotMatch(html(render({}, makeHass({ updates: [], attrs: { failed: [], not_checked: [], github_connected: false } }))), /GitHub isn’t connected/);
+  assert.doesNotMatch(html(render({ show_failed: false }, makeHass({ updates: [], attrs: { not_checked: ['x'], github_connected: false } }))), /GitHub isn’t connected/);
 });
 
 test('hide_when_ok hides the card only while everything is up to date', () => {

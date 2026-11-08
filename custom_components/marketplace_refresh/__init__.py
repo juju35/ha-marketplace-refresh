@@ -164,9 +164,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarketplaceRefreshConfig
     await refresher.async_load()
     entry.runtime_data = refresher
 
-    hours = int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
-    if hours > 0:
-        _async_schedule(hass, entry, refresher, timedelta(hours=hours))
+    if refresher.scan_interval > 0:
+        _async_schedule(hass, entry, refresher, timedelta(hours=refresher.scan_interval))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
@@ -180,7 +179,8 @@ def _async_schedule(
 
     Once Home Assistant has started, an overdue check runs right away, so that restarting more
     often than the interval doesn't postpone it forever. Before the first check, the interval
-    counts from the first setup.
+    counts from the first setup. The time the scheduler sets (`next_due`, also an hour after a
+    failed or skipped check) is kept across restarts and shown as the sensor's `next_check`.
     """
     cancel: list[CALLBACK_TYPE] = []
 
@@ -190,23 +190,28 @@ def _async_schedule(
             cancel.pop()()
 
     @callback
-    def schedule(delay: timedelta) -> None:
+    def schedule(due: datetime) -> None:
         cancel_timer()
-        cancel.append(async_call_later(hass, max(delay.total_seconds(), 0), run))
+        refresher.async_set_next_due(due)
+        cancel.append(async_call_later(hass, max((due - dt_util.utcnow()).total_seconds(), 0), run))
 
-    def remaining() -> timedelta:
-        last = refresher.last_check or refresher.since or dt_util.utcnow()
-        return last + interval - dt_util.utcnow()
+    def interval_due() -> datetime:
+        return (refresher.last_check or refresher.since or dt_util.utcnow()) + interval
 
     @callback
     def schedule_next() -> None:
-        schedule(remaining())
+        schedule(interval_due())
+
+    @callback
+    def retry() -> None:
+        # Often temporary (Marketplace rate-limited or still starting, GitHub down): try again within the hour.
+        schedule(dt_util.utcnow() + min(interval, RETRY_INTERVAL))
 
     @callback
     def on_done() -> None:
         # A failed check (often temporary) is tried again within the hour, not a whole interval later.
         if refresher.state == STATE_ERROR:
-            schedule(min(interval, RETRY_INTERVAL))
+            retry()
         else:
             schedule_next()
 
@@ -220,15 +225,16 @@ def _async_schedule(
             refresher.async_start()
         except MarketplaceNotAvailableError as err:
             _LOGGER.warning("Scheduled Marketplace check skipped: %s", err)
-            # Often temporary (Marketplace rate-limited or still starting): try again within the hour.
-            schedule(min(interval, RETRY_INTERVAL))
+            retry()
 
     @callback
     def at_started(_hass: HomeAssistant) -> None:
-        if remaining() <= timedelta(0):
+        # The time set before the restart (a retry within the hour included), never later than one interval.
+        due = interval_due() if refresher.next_due is None else min(refresher.next_due, interval_due())
+        if due <= dt_util.utcnow():
             entry.async_create_task(hass, run(dt_util.utcnow()))
         else:
-            schedule_next()
+            schedule(due)
 
     refresher.on_done = on_done
     refresher.on_install_done = schedule_next
@@ -251,4 +257,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: MarketplaceRefreshConfi
 
 
 async def _async_reload(hass: HomeAssistant, entry: MarketplaceRefreshConfigEntry) -> None:
+    """Reload with the new options; a new interval counts from the last check, not from the time set before."""
+    refresher = entry.runtime_data
+    if refresher.scan_interval != int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)):
+        await refresher.async_forget_next_due()
     await hass.config_entries.async_reload(entry.entry_id)

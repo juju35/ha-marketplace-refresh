@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MarketplaceRefreshConfigEntry
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, STATE_ERROR, STATE_IDLE, STATE_RUNNING
+from .const import STATE_ERROR, STATE_IDLE, STATE_RUNNING
 from .entity import MarketplaceRefreshEntity
 
 
@@ -32,7 +32,7 @@ class StatusSensor(MarketplaceRefreshEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options: ClassVar[list[str]] = [STATE_IDLE, STATE_RUNNING, STATE_ERROR]
     # Lists that change at every repository checked or installed: kept out of the recorder.
-    _unrecorded_attributes = frozenset({"failed", "checking", "installing", "install_failed"})
+    _unrecorded_attributes = frozenset({"failed", "not_checked", "checking", "installing", "install_failed"})
 
     @property
     def native_value(self) -> str:
@@ -46,6 +46,7 @@ class StatusSensor(MarketplaceRefreshEntity, SensorEntity):
             "total": r.total,
             "updates": r.updates,
             "failed": list(r.failed),
+            "not_checked": list(r.not_checked),
             "error": r.error,
             "checking": sorted(r.checking),
             "installing": list(r.installing),
@@ -68,7 +69,8 @@ class LastCheckSensor(MarketplaceRefreshEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """The automatic check's interval (hours, 0 = off) and when it is due, for the card."""
         r = self.refresher
-        hours = int(r.entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        hours = r.scan_interval
+        # As set by the scheduler (an hour after a failed check); before it starts, one interval after the last check.
         last = r.last_check or r.since
-        due = last + timedelta(hours=hours) if hours > 0 and last else None
+        due = (r.next_due or (last + timedelta(hours=hours) if last else None)) if hours > 0 else None
         return {"scan_interval": hours, "next_check": due.isoformat() if due else None}

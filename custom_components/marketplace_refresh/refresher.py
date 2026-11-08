@@ -40,6 +40,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENT_UPDATES_FOUND,
     MARKETPLACE_DOMAIN,
@@ -136,6 +138,8 @@ class MarketplaceRefresher:
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self.hass = hass
         self.entry = entry
+        # The automatic check's interval this entry was set up with (hours, 0 = off).
+        self.scan_interval = int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
         # The last full check and its result, kept across restarts for the interval and the sensors.
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, DOMAIN)
         # Called when a full check ends, whatever started it.
@@ -150,9 +154,14 @@ class MarketplaceRefresher:
         # None before the first check, which only records them.
         self.pending: list[str] | None = None
         self.failed: list[str] = []
+        # Repositories the last full check could not check because no GitHub account is connected (added from a link):
+        # not failures, the Marketplace has no other source for them.
+        self.not_checked: list[str] = []
         self.error: str | None = None
         self.last_check: datetime | None = None
         self.since: datetime | None = None
+        # When the automatic check is due, as scheduled (an hour after a failed or skipped check), kept across restarts.
+        self.next_due: datetime | None = None
         # Whether a GitHub account was connected to the Marketplace at the last check: without one,
         # only the catalog is read, and the repositories added from a link can't be checked.
         self.github_connected: bool | None = None
@@ -176,6 +185,7 @@ class MarketplaceRefresher:
         self.last_check = _parse(data.get("last_check"))
         self.updates = data.get("updates")
         self.pending = data.get("pending")
+        self.next_due = _parse(data.get("next_due"))
         # Before the first check, the interval counts from the first setup.
         self.since = _parse(data.get("since"))
         if self.since is None:
@@ -189,8 +199,23 @@ class MarketplaceRefresher:
                 "last_check": self.last_check.isoformat() if self.last_check else None,
                 "updates": self.updates,
                 "pending": self.pending,
+                "next_due": self.next_due.isoformat() if self.next_due else None,
             }
         )
+
+    @callback
+    def async_set_next_due(self, due: datetime | None) -> None:
+        """Remember when the automatic check is due (None: count from the last check), for the sensor and a restart."""
+        if due == self.next_due:
+            return
+        self.next_due = due
+        self._notify()
+        self.entry.async_create_task(self.hass, self._async_save())
+
+    async def async_forget_next_due(self) -> None:
+        """Drop the time set by the scheduler (the interval changed): the next one counts from the last check."""
+        self.next_due = None
+        await self._async_save()
 
     @property
     def running(self) -> bool:
@@ -239,6 +264,7 @@ class MarketplaceRefresher:
         self.done = 0
         self.total = 0
         self.failed = []
+        self.not_checked = []
         self.error = None
         self._progress_at = 0.0
         self._notify()
@@ -284,8 +310,10 @@ class MarketplaceRefresher:
             # The full check refreshes these repositories too: wait for its end instead of a second refresh.
             # A repository whose category it leaves out is checked here once it ends.
             covered = {e: repo for e, repo in targets.items() if _in_full_check(marketplace, repo)}
-            left_out = {e: repo for e, repo in targets.items() if e not in covered}
             await self.async_wait()
+            # A repository the full check could not check (no GitHub account connected) is checked here.
+            covered = {e: repo for e, repo in covered.items() if repo.data.full_name not in self.not_checked}
+            left_out = {e: repo for e, repo in targets.items() if e not in covered}
             failed: list[str] = []
             if covered:
                 self.raise_if_full_check_failed()
@@ -494,13 +522,13 @@ class MarketplaceRefresher:
                 await self._async_refresh_from_github(repositories)
             else:
                 # Anonymous GitHub limit (60 requests an hour): the catalog is the only source. A repository
-                # added from a link isn't in it, so nothing checked it.
+                # added from a link isn't in it, so nothing checked it: listed apart, not as a failure.
                 for repo in repositories:
                     if _custom(marketplace, repo):
                         _LOGGER.warning(
                             "Could not check %s: no GitHub account connected to the Marketplace", repo.data.full_name
                         )
-                        self.failed.append(repo.data.full_name)
+                        self.not_checked.append(repo.data.full_name)
                 self.done = self.total
             await marketplace.data.async_write()
             # The update entities only change when their coordinator says so.

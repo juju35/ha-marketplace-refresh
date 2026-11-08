@@ -78,14 +78,14 @@ Copy `custom_components/marketplace_refresh/` to `/config/custom_components/mark
 | Entity | Description |
 |---|---|
 | `button.marketplace_refresh_check_for_updates` | Starts a check. Unavailable while one is running |
-| `sensor.marketplace_refresh_status` | `idle`, `running` or `error`. Attributes: `done`, `total`, `updates`, `failed` (list of `owner/repo`), `error`, `checking` (update entities being checked by `check_repository`), `installing` (update entities left to install, the current one first), `install_failed` (`title: error` of the updates that couldn't be installed), `github_connected` (whether a GitHub account was connected to the Marketplace at the last check) |
-| `sensor.marketplace_refresh_last_check` | End of the last check. Attributes: `scan_interval` (hours, `0` = automatic check off), `next_check` (when the next automatic check is due, `null` when it is off) |
+| `sensor.marketplace_refresh_status` | `idle`, `running` or `error`. Attributes: `done`, `total`, `updates`, `failed` (list of `owner/repo`), `not_checked` (`owner/repo` of the repositories added from a link that the last check couldn't check because no GitHub account is connected to the Marketplace), `error`, `checking` (update entities being checked by `check_repository`), `installing` (update entities left to install, the current one first), `install_failed` (`title: error` of the updates that couldn't be installed), `github_connected` (whether a GitHub account was connected to the Marketplace at the last check) |
+| `sensor.marketplace_refresh_last_check` | End of the last check. Attributes: `scan_interval` (hours, `0` = automatic check off), `next_check` (when the next automatic check is due, within the hour after a failed or skipped one, kept across restarts; `null` when it is off) |
 
 ### Action `marketplace_refresh.check_updates`
 
 | Field | Default | Description |
 |---|---|---|
-| `wait` | `false` | Wait until every repository has been checked before the action ends. The action then fails if the check failed or could not check a repository (the error lists them), so the steps after it only run on a complete check |
+| `wait` | `false` | Wait until every repository has been checked before the action ends. The action then fails if the check failed or could not check a repository (the error lists them), so the steps after it only run on a complete check. The repositories added from a link that couldn't be checked because no GitHub account is connected don't make it fail: they are in the status sensor's `not_checked` attribute |
 
 Check every night and get notified of the updates found:
 
@@ -201,7 +201,7 @@ The Marketplace has no action to check everything: its panel refreshes one repos
 
 The update entities (`update.*` of platform `marketplace`) then show the new latest versions, like after a manual refresh in the Marketplace.
 
-Without a GitHub account connected, the Marketplace runs on GitHub's anonymous limit (60 requests an hour), far too small to fetch every repository: a check then only reads the catalog, and the repositories added from a link, which the catalog doesn't list, are reported as "could not be checked". `check_repository` always asks GitHub, as the Marketplace's own refresh does.
+Without a GitHub account connected, the Marketplace runs on GitHub's anonymous limit (60 requests an hour), far too small to fetch every repository: a check then only reads the catalog, and the repositories added from a link, which the catalog doesn't list, are reported as "could not be checked" (the status sensor's `not_checked` attribute, not a failure of `check_updates`). `check_repository` always asks GitHub, as the Marketplace's own refresh does, also during a full check for these repositories.
 
 This relies on the Marketplace manager (the `runtime_data` of its config entry), as the Marketplace's own websocket commands do. The integration checks that the attributes it needs exist: if a future Home Assistant version changes them, the action fails with a clear message instead of breaking Home Assistant.
 
