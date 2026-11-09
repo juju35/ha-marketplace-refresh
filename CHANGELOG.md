@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.0 - 2026-11-09
+
+### Features
+- **Install retries**: an update that fails to install (**Update all**, `install_updates`) is tried again twice, after 30 s then 90 s, before being listed as failed. GitHub sometimes answers 500 on one of a release's files — a card with its translations split out downloads 22 — and the whole install fails; a little later the same download goes through. No retry once the Marketplace is disabled (rate limit), nor when the update was installed or skipped meanwhile.
+
 ## 2.4.1 - 2026-11-09
 
 ### Maintenance

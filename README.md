@@ -25,7 +25,7 @@ The Marketplace itself reads its catalog every 6 hours, checks the repositories 
 
 - **Check for updates** button and `marketplace_refresh.check_updates` action: the catalog is read again, then every installed repository is fetched again from GitHub (with a GitHub account connected to the Marketplace), four at a time, and the Marketplace's update entities are refreshed
 - **`marketplace_refresh.check_repository`** action: checks only the repositories behind the Marketplace update entities you give, and waits for the result
-- **`marketplace_refresh.install_updates`** action and **Update all** button on the card: installs every update available (or the ones you give), one after the other, administrators only; optionally after a Home Assistant backup, and nothing is installed if the backup fails
+- **`marketplace_refresh.install_updates`** action and **Update all** button on the card: installs every update available (or the ones you give), one after the other, administrators only; a failed install is tried again twice (after 30 s, then 90 s) — GitHub sometimes fails to serve one of a release's files — unless the Marketplace is disabled meanwhile; optionally after a Home Assistant backup, and nothing is installed if the backup fails
 - **Automatic check** at the interval set in the integration options (24 hours by default, `0` to turn it off), counted from the last check and kept across restarts: an overdue check runs as soon as Home Assistant has started, and a check that failed (or couldn't start) is tried again within the hour
 - **`marketplace_refresh_updates_found` event** when a check finds updates that the previous one didn't, for notifications and automations
 - **Diagnostics** to download from the integration page, secrets redacted
