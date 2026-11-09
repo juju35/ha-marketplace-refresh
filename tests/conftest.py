@@ -14,6 +14,12 @@ from custom_components.marketplace_refresh.const import DOMAIN
 
 
 @pytest.fixture(autouse=True)
+def no_install_retry_wait(monkeypatch):
+    """Failed installs are tried again at once in the tests."""
+    monkeypatch.setattr("custom_components.marketplace_refresh.refresher.INSTALL_RETRY_DELAYS", (0, 0))
+
+
+@pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Load custom_components/ in every test."""
     yield

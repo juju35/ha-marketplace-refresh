@@ -867,15 +867,16 @@ def _marketplace_update_entities(hass: HomeAssistant, states: dict[str, str]) ->
         hass.states.async_set(f"update.{object_id}", state, {"title": object_id.replace("_", " ").title()})
 
 
-def _fake_update_install(hass: HomeAssistant, fail: set[str] | None = None) -> list[str]:
-    """update.install stand-in: turns the entity off, or fails for the ones in `fail`. Returns the calls, in order."""
+def _fake_update_install(hass: HomeAssistant, fail: set[str] | None = None, fail_times: int | None = None) -> list[str]:
+    """update.install stand-in: turns the entity off, or fails for the ones in `fail` (the first `fail_times` calls
+    only, when given). Returns the calls, in order."""
     calls: list[str] = []
 
     async def install(call) -> None:
         for entity_id in cv.entity_ids(call.data["entity_id"]):
             calls.append(entity_id)
             await asyncio.sleep(0)
-            if entity_id in (fail or set()):
+            if entity_id in (fail or set()) and (fail_times is None or calls.count(entity_id) <= fail_times):
                 raise HomeAssistantError("download failed")
             hass.states.async_set(entity_id, "off", hass.states.get(entity_id).attributes)
 
@@ -972,8 +973,38 @@ async def test_install_updates_reports_failures_and_goes_on(hass, fake_marketpla
     calls = _fake_update_install(hass, fail={"update.card_mod"})
     with pytest.raises(HomeAssistantError, match="Card Mod: download failed"):
         await hass.services.async_call(DOMAIN, "install_updates", {"wait": True}, blocking=True)
-    assert calls == ["update.card_mod", "update.mushroom"]
+    # Tried 3 times (2 retries), then the next one.
+    assert calls == ["update.card_mod"] * 3 + ["update.mushroom"]
     assert hass.states.get(STATUS).attributes["install_failed"] == ["Card Mod: download failed"]
+
+
+async def test_install_updates_retries_a_failed_download(hass, fake_marketplace, caplog):
+    await _setup(hass)
+    _marketplace_update_entities(hass, {"mushroom": "on", "card_mod": "on"})
+    calls = _fake_update_install(hass, fail={"update.card_mod"}, fail_times=1)
+    await hass.services.async_call(DOMAIN, "install_updates", {"wait": True}, blocking=True)
+    assert calls == ["update.card_mod", "update.card_mod", "update.mushroom"]
+    assert hass.states.get("update.card_mod").state == "off"
+    assert hass.states.get(STATUS).attributes["install_failed"] == []
+    assert "trying again" in caplog.text
+    assert "Could not install the update of Card Mod: " not in caplog.text
+
+
+async def test_install_updates_no_retry_once_the_marketplace_is_disabled(hass, fake_marketplace):
+    await _setup(hass)
+    _marketplace_update_entities(hass, {"card_mod": "on"})
+    calls = _fake_update_install(hass, fail={"update.card_mod"})
+
+    async def install(call) -> None:
+        calls.append(call.data["entity_id"])
+        fake_marketplace.system.disabled = True
+        fake_marketplace.system.disabled_reason = "rate_limit"
+        raise HomeAssistantError("The Marketplace is disabled (rate_limit)")
+
+    hass.services.async_register("update", "install", install)
+    with pytest.raises(HomeAssistantError, match="rate_limit"):
+        await hass.services.async_call(DOMAIN, "install_updates", {"wait": True}, blocking=True)
+    assert len(calls) == 1
 
 
 async def test_install_updates_progress_and_no_second_run(hass, fake_marketplace):

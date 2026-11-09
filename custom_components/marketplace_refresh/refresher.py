@@ -77,6 +77,11 @@ def _loaded_marketplace(hass: HomeAssistant) -> Any | None:
     return getattr(entries[0], "runtime_data", None) if entries else None
 
 
+# Waits before installing a failed update again, one per retry. A release asset GitHub fails to serve (a 500 on one of
+# a card's 22 files) fails the whole install; a little later the same download goes through.
+INSTALL_RETRY_DELAYS: tuple[float, ...] = (30, 90)
+
+
 def _marketplace(hass: HomeAssistant) -> Any:
     """The Marketplace manager, checked to be usable."""
     marketplace = _loaded_marketplace(hass)
@@ -499,15 +504,7 @@ class MarketplaceRefresher:
                 state = self.hass.states.get(entity_id)
                 # Installed or skipped meanwhile (from the Marketplace, another action): nothing left to do.
                 if state is not None and state.state == STATE_ON:
-                    try:
-                        await self.hass.services.async_call(
-                            "update", "install", {ATTR_ENTITY_ID: entity_id}, blocking=True, context=context
-                        )
-                    except Exception as err:  # noqa: BLE001 - one update must not stop the others
-                        name = state.attributes.get("title") or state.name
-                        _LOGGER.warning("Could not install the update of %s: %s", name, err)
-                        # A new list: the sensor attribute never changes in place.
-                        self.install_failed = [*self.install_failed, f"{name}: {err}"]
+                    await self._async_install_one(entity_id, state.attributes.get("title") or state.name, context)
                 self.installing = self.installing[1:]
                 self._notify()
         finally:
@@ -517,6 +514,35 @@ class MarketplaceRefresher:
             # A check due meanwhile runs now; not after an unload, which cancels this task.
             if self.on_install_done is not None and not _cancelling():
                 self.on_install_done()
+
+    async def _async_install_one(self, entity_id: str, name: str, context: Context | None) -> None:
+        """Install one update, again after INSTALL_RETRY_DELAYS when it fails; the last error goes to install_failed."""
+        for delay in (*INSTALL_RETRY_DELAYS, None):
+            try:
+                await self.hass.services.async_call(
+                    "update", "install", {ATTR_ENTITY_ID: entity_id}, blocking=True, context=context
+                )
+            except Exception as err:  # noqa: BLE001 - one update must not stop the others
+                # No retry once the Marketplace is disabled (rate limit, removed): it would fail the same way.
+                if delay is not None and self._marketplace_available():
+                    _LOGGER.info("Could not install the update of %s (%s), trying again in %s s", name, err, delay)
+                    await asyncio.sleep(delay)
+                    state = self.hass.states.get(entity_id)
+                    # Installed or skipped meanwhile: nothing left to do.
+                    if state is None or state.state != STATE_ON:
+                        return
+                    continue
+                _LOGGER.warning("Could not install the update of %s: %s", name, err)
+                # A new list: the sensor attribute never changes in place.
+                self.install_failed = [*self.install_failed, f"{name}: {err}"]
+            return
+
+    def _marketplace_available(self) -> bool:
+        try:
+            _marketplace(self.hass)
+        except MarketplaceNotAvailableError:
+            return False
+        return True
 
     async def _async_backup(self, context: Context | None) -> bool:
         """Create Home Assistant's automatic backup (its settings: what, where, how many kept); False if it failed."""
