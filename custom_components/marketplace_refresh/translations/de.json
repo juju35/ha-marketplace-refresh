@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Marketplace Refresh-Optionen",
-        "data": { "scan_interval": "Prüfintervall" },
-        "data_description": { "scan_interval": "Stunden zwischen zwei automatischen Prüfungen. 0 deaktiviert die automatische Prüfung: Verwende dann die Schaltfläche oder die Aktion." }
+        "data": { "scan_interval": "Prüfintervall", "backup_before_install": "Vor dem Installieren von Updates sichern" },
+        "data_description": { "scan_interval": "Stunden zwischen zwei automatischen Prüfungen. 0 deaktiviert die automatische Prüfung: Verwende dann die Schaltfläche oder die Aktion.", "backup_before_install": "Vor Alle aktualisieren (oder der Aktion ohne backup) das automatische Backup von Home Assistant erstellen, mit seinen Einstellungen unter Einstellungen > System > Backups; schlägt es fehl, wird nichts installiert." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Installiert die Updates der Marketplace-Repositorys nacheinander, im Hintergrund, außer wenn Warten gesetzt ist. Nur für Administratoren.",
       "fields": {
         "entity_id": { "name": "Update-Entitäten", "description": "Zu aktualisierende Marketplace-Update-Entitäten; leer lassen für alle Repositorys mit einem Update." },
-        "wait": { "name": "Warten", "description": "Warten, bis alle Updates installiert sind, bevor die Aktion endet; die Aktion schlägt dann fehl, wenn ein Update nicht installiert werden konnte." }
+        "wait": { "name": "Warten", "description": "Warten, bis alle Updates installiert sind, bevor die Aktion endet; die Aktion schlägt dann fehl, wenn ein Update nicht installiert werden konnte." },
+        "backup": { "name": "Zuerst sichern", "description": "Vor dem Installieren das automatische Backup von Home Assistant erstellen; schlägt es fehl, wird nichts installiert. Leer lassen, um der Option der Integration zu folgen." }
       }
     }
   },

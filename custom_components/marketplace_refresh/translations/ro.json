@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Opțiuni Marketplace Refresh",
-        "data": { "scan_interval": "Interval de verificare" },
-        "data_description": { "scan_interval": "Ore între două verificări automate. 0 dezactivează verificarea automată: folosiți butonul sau acțiunea." }
+        "data": { "scan_interval": "Interval de verificare", "backup_before_install": "Copie de rezervă înainte de instalarea actualizărilor" },
+        "data_description": { "scan_interval": "Ore între două verificări automate. 0 dezactivează verificarea automată: folosiți butonul sau acțiunea.", "backup_before_install": "Înainte de Actualizează tot (sau de acțiunea fără backup), creează copia de rezervă automată a Home Assistant, cu setările din Setări > Sistem > Copii de rezervă; dacă eșuează, nu se instalează nimic." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Instalează actualizările depozitelor Marketplace, una după alta, în fundal, cu excepția cazului în care este setat «wait». Doar pentru administratori.",
       "fields": {
         "entity_id": { "name": "Entități de actualizare", "description": "Entitățile de actualizare Marketplace de actualizat; lăsați gol pentru toate depozitele care au o actualizare." },
-        "wait": { "name": "Așteaptă", "description": "Așteaptă până când toate actualizările au fost instalate înainte de încheierea acțiunii; acțiunea eșuează apoi dacă o actualizare nu a putut fi instalată." }
+        "wait": { "name": "Așteaptă", "description": "Așteaptă până când toate actualizările au fost instalate înainte de încheierea acțiunii; acțiunea eșuează apoi dacă o actualizare nu a putut fi instalată." },
+        "backup": { "name": "Mai întâi copia de rezervă", "description": "Creează copia de rezervă automată a Home Assistant înainte de instalare; nu se instalează nimic dacă eșuează. Lasă gol pentru a urma opțiunea integrării." }
       }
     }
   },

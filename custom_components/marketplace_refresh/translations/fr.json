@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Options de Marketplace Refresh",
-        "data": { "scan_interval": "Fréquence de vérification" },
-        "data_description": { "scan_interval": "Heures entre deux vérifications automatiques. 0 désactive la vérification automatique : utilisez le bouton ou l'action." }
+        "data": { "scan_interval": "Fréquence de vérification", "backup_before_install": "Sauvegarder avant d'installer les mises à jour" },
+        "data_description": { "scan_interval": "Heures entre deux vérifications automatiques. 0 désactive la vérification automatique : utilisez le bouton ou l'action.", "backup_before_install": "Avant Tout mettre à jour (ou l'action sans backup), créer la sauvegarde automatique de Home Assistant, avec ses réglages de Paramètres > Système > Sauvegardes ; si elle échoue, rien n'est installé." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Installe les mises à jour des dépôts du Marketplace, l’une après l’autre, en arrière-plan sauf si « Attendre » est activé. Administrateurs uniquement.",
       "fields": {
         "entity_id": { "name": "Entités de mise à jour", "description": "Entités de mise à jour du Marketplace à mettre à jour ; laisser vide pour tous les dépôts avec une mise à jour." },
-        "wait": { "name": "Attendre", "description": "Attendre que toutes les mises à jour soient installées avant la fin de l’action ; l’action échoue alors si une mise à jour n’a pas pu être installée." }
+        "wait": { "name": "Attendre", "description": "Attendre que toutes les mises à jour soient installées avant la fin de l’action ; l’action échoue alors si une mise à jour n’a pas pu être installée." },
+        "backup": { "name": "Sauvegarder d'abord", "description": "Créer la sauvegarde automatique de Home Assistant avant d'installer ; rien n'est installé si elle échoue. Laisser vide pour suivre l'option de l'intégration." }
       }
     }
   },

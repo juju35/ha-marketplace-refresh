@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Opcije za Marketplace Refresh",
-        "data": { "scan_interval": "Interval provere" },
-        "data_description": { "scan_interval": "Broj sati između dve automatske provere. 0 isključuje automatsku proveru: koristite dugme ili akciju." }
+        "data": { "scan_interval": "Interval provere", "backup_before_install": "Rezervna kopija pre instaliranja ažuriranja" },
+        "data_description": { "scan_interval": "Broj sati između dve automatske provere. 0 isključuje automatsku proveru: koristite dugme ili akciju.", "backup_before_install": "Pre Ažuriraj sve (ili akcije bez backup) pravi se automatska rezervna kopija Home Assistant-a, sa podešavanjima iz Podešavanja > Sistem > Rezervne kopije; ako ne uspe, ništa se ne instalira." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Instalira ažuriranja Marketplace repozitorijuma, jedno za drugim, u pozadini, osim ako je postavljeno čekanje. Samo za administratore.",
       "fields": {
         "entity_id": { "name": "Entiteti ažuriranja", "description": "Marketplace entiteti ažuriranja koje treba ažurirati; ostavite prazno za svaki repozitorijum sa ažuriranjem." },
-        "wait": { "name": "Čekaj", "description": "Čekaj da sva ažuriranja budu instalirana pre nego što se akcija završi; akcija tada ne uspeva ako neko ažuriranje nije moglo da bude instalirano." }
+        "wait": { "name": "Čekaj", "description": "Čekaj da sva ažuriranja budu instalirana pre nego što se akcija završi; akcija tada ne uspeva ako neko ažuriranje nije moglo da bude instalirano." },
+        "backup": { "name": "Prvo rezervna kopija", "description": "Napravi automatsku rezervnu kopiju Home Assistant-a pre instaliranja; ništa se ne instalira ako ne uspe. Ostavite prazno da važi opcija integracije." }
       }
     }
   },

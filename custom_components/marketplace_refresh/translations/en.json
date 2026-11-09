@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Marketplace Refresh options",
-        "data": { "scan_interval": "Check interval" },
-        "data_description": { "scan_interval": "Hours between two automatic checks. 0 turns the automatic check off: use the button or the action." }
+        "data": { "scan_interval": "Check interval", "backup_before_install": "Back up before installing updates" },
+        "data_description": { "scan_interval": "Hours between two automatic checks. 0 turns the automatic check off: use the button or the action.", "backup_before_install": "Before Update all (or the action without backup), create Home Assistant's automatic backup, with its settings in Settings > System > Backups; if it fails, nothing is installed." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Installs the updates of the Marketplace repositories, one after the other, in the background unless wait is set. Administrators only.",
       "fields": {
         "entity_id": { "name": "Update entities", "description": "Marketplace update entities to update; leave empty for every repository with an update." },
-        "wait": { "name": "Wait", "description": "Wait until every update has been installed before the action ends; the action then fails if an update could not be installed." }
+        "wait": { "name": "Wait", "description": "Wait until every update has been installed before the action ends; the action then fails if an update could not be installed." },
+        "backup": { "name": "Back up first", "description": "Create Home Assistant's automatic backup before installing; nothing is installed if it fails. Leave empty to follow the integration option." }
       }
     }
   },

@@ -27,3 +27,6 @@ install_updates:
       default: false
       selector:
         boolean:
+    backup:
+      selector:
+        boolean:

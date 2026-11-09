@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.0 - 2026-11-09
+
+### Features
+- **Back up before installing updates** (option, off by default): **Update all** first creates Home Assistant's automatic backup (`backup.create_automatic`, with the settings of Settings → System → Backups), and installs nothing if it fails; the failure is listed with the updates that couldn't be installed. `marketplace_refresh.install_updates` gets a `backup` field to ask for it or not, whatever the option.
+
 ## 2.3.0 - 2026-11-09
 
 ### Performance

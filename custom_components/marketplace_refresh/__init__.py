@@ -40,12 +40,17 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 ATTR_WAIT = "wait"
+ATTR_BACKUP = "backup"
 # Delay before trying again a scheduled check that failed or was skipped because the Marketplace couldn't be used.
 RETRY_INTERVAL = timedelta(hours=1)
 CHECK_UPDATES_SCHEMA = vol.Schema({vol.Optional(ATTR_WAIT, default=False): cv.boolean})
 CHECK_REPOSITORY_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 INSTALL_UPDATES_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_ENTITY_ID): cv.entity_ids, vol.Optional(ATTR_WAIT, default=False): cv.boolean}
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(ATTR_WAIT, default=False): cv.boolean,
+        vol.Optional(ATTR_BACKUP): cv.boolean,
+    }
 )
 
 type MarketplaceRefreshConfigEntry = ConfigEntry[MarketplaceRefresher]
@@ -110,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def install_updates(call: ServiceCall) -> None:
         refresher = loaded_refresher()
         try:
-            refresher.async_start_install(call.data.get(ATTR_ENTITY_ID), call.context)
+            refresher.async_start_install(call.data.get(ATTR_ENTITY_ID), call.context, call.data.get(ATTR_BACKUP))
         except MarketplaceNotAvailableError as err:
             raise _validation_error(err) from err
         if call.data[ATTR_WAIT]:

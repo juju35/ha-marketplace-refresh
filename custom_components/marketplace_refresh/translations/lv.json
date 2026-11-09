@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Marketplace Refresh opcijas",
-        "data": { "scan_interval": "Pārbaudes intervāls" },
-        "data_description": { "scan_interval": "Stundas starp divām automātiskām pārbaudēm. 0 izslēdz automātisko pārbaudi: izmantojiet pogu vai darbību." }
+        "data": { "scan_interval": "Pārbaudes intervāls", "backup_before_install": "Rezerves kopija pirms atjauninājumu instalēšanas" },
+        "data_description": { "scan_interval": "Stundas starp divām automātiskām pārbaudēm. 0 izslēdz automātisko pārbaudi: izmantojiet pogu vai darbību.", "backup_before_install": "Pirms «Atjaunināt visu» (vai darbības bez backup) tiek izveidota Home Assistant automātiskā rezerves kopija ar iestatījumiem sadaļā Iestatījumi > Sistēma > Rezerves kopijas; ja tā neizdodas, nekas netiek instalēts." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Instalē Marketplace repozitoriju atjauninājumus vienu pēc otra, fonā, ja vien nav iestatīts wait. Tikai administratoriem.",
       "fields": {
         "entity_id": { "name": "Atjauninājumu vienības", "description": "Atjaunināmās Marketplace atjauninājumu vienības; atstājiet tukšu visiem repozitorijiem, kuriem ir atjauninājums." },
-        "wait": { "name": "Gaidīt", "description": "Pirms darbības beigām gaidīt, līdz visi atjauninājumi ir instalēti; darbība tad neizdodas, ja kādu atjauninājumu neizdevās instalēt." }
+        "wait": { "name": "Gaidīt", "description": "Pirms darbības beigām gaidīt, līdz visi atjauninājumi ir instalēti; darbība tad neizdodas, ja kādu atjauninājumu neizdevās instalēt." },
+        "backup": { "name": "Vispirms rezerves kopija", "description": "Izveidot Home Assistant automātisko rezerves kopiju pirms instalēšanas; ja tā neizdodas, nekas netiek instalēts. Atstājiet tukšu, lai izmantotu integrācijas opciju." }
       }
     }
   },

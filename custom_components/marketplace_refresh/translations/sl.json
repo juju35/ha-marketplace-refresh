@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Možnosti Marketplace Refresh",
-        "data": { "scan_interval": "Interval preverjanja" },
-        "data_description": { "scan_interval": "Število ur med dvema samodejnima preverjanjema. 0 izklopi samodejno preverjanje: uporabite gumb ali dejanje." }
+        "data": { "scan_interval": "Interval preverjanja", "backup_before_install": "Varnostna kopija pred namestitvijo posodobitev" },
+        "data_description": { "scan_interval": "Število ur med dvema samodejnima preverjanjema. 0 izklopi samodejno preverjanje: uporabite gumb ali dejanje.", "backup_before_install": "Pred Posodobi vse (ali dejanjem brez backup) se ustvari samodejna varnostna kopija Home Assistant z nastavitvami v Nastavitve > Sistem > Varnostne kopije; če ne uspe, se nič ne namesti." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Namesti posodobitve repozitorijev Marketplace, eno za drugo, v ozadju, razen če je nastavljen wait. Samo za skrbnike.",
       "fields": {
         "entity_id": { "name": "Entitete posodobitev", "description": "Entitete posodobitev Marketplace, ki jih je treba posodobiti; pustite prazno za vse repozitorije s posodobitvijo." },
-        "wait": { "name": "Počakaj", "description": "Počakaj, da so nameščene vse posodobitve, preden se dejanje konča; dejanje nato ne uspe, če posodobitve ni bilo mogoče namestiti." }
+        "wait": { "name": "Počakaj", "description": "Počakaj, da so nameščene vse posodobitve, preden se dejanje konča; dejanje nato ne uspe, če posodobitve ni bilo mogoče namestiti." },
+        "backup": { "name": "Najprej varnostna kopija", "description": "Ustvari samodejno varnostno kopijo Home Assistant pred namestitvijo; če ne uspe, se nič ne namesti. Pustite prazno, da velja možnost integracije." }
       }
     }
   },

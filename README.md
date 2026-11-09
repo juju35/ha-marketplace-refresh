@@ -25,7 +25,7 @@ The Marketplace itself reads its catalog every 6 hours, checks the repositories 
 
 - **Check for updates** button and `marketplace_refresh.check_updates` action: the catalog is read again, then every installed repository is fetched again from GitHub (with a GitHub account connected to the Marketplace), four at a time, and the Marketplace's update entities are refreshed
 - **`marketplace_refresh.check_repository`** action: checks only the repositories behind the Marketplace update entities you give, and waits for the result
-- **`marketplace_refresh.install_updates`** action and **Update all** button on the card: installs every update available (or the ones you give), one after the other, administrators only
+- **`marketplace_refresh.install_updates`** action and **Update all** button on the card: installs every update available (or the ones you give), one after the other, administrators only; optionally after a Home Assistant backup, and nothing is installed if the backup fails
 - **Automatic check** at the interval set in the integration options (24 hours by default, `0` to turn it off), counted from the last check and kept across restarts: an overdue check runs as soon as Home Assistant has started, and a check that failed (or couldn't start) is tried again within the hour
 - **`marketplace_refresh_updates_found` event** when a check finds updates that the previous one didn't, for notifications and automations
 - **Diagnostics** to download from the integration page, secrets redacted
@@ -72,6 +72,7 @@ Copy `custom_components/marketplace_refresh/` to `/config/custom_components/mark
 | Option | Default | Description |
 |---|---|---|
 | Check interval | 24 h | Hours between two automatic checks, from 1 to 168. `0` turns the automatic check off. Counted from the end of the last check (or from the installation before the first one), across restarts |
+| Back up before installing updates | off | Before **Update all** (and `install_updates` without `backup`), create Home Assistant's automatic backup — what it holds, where it goes and how many are kept follow **Settings → System → Backups**. If the backup fails, nothing is installed and the failure is listed with the updates that couldn't be installed |
 
 ### Entities
 
@@ -124,6 +125,7 @@ data:
 |---|---|---|
 | `entity_id` | every Marketplace update entity with an update | Marketplace update entities to install |
 | `wait` | `false` | Wait until every update is installed; the action then fails if one couldn't be |
+| `backup` | the *Back up before installing updates* option | Create Home Assistant's automatic backup (`backup.create_automatic`) first; nothing is installed if it fails |
 
 Installs the updates one after the other with `update.install`, in the background (a check running ends first). One failing update doesn't stop the others; the failures are in the status sensor's `install_failed` attribute. Administrators only, like the Marketplace, and the Marketplace warning must have been accepted once in **Settings → Marketplace** (an install from an automation runs without a user); it can't run twice at the same time. Meanwhile, no full check starts: the **Check for updates** button is greyed out, `marketplace_refresh.check_updates` fails with "Updates are being installed", and an automatic check that falls due runs once the installs are done. Integrations need a restart of Home Assistant afterwards, which the Marketplace asks for in **Settings → Repairs**.
 

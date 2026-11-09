@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Opcje Marketplace Refresh",
-        "data": { "scan_interval": "Częstotliwość sprawdzania" },
-        "data_description": { "scan_interval": "Liczba godzin między dwoma automatycznymi sprawdzeniami. 0 wyłącza automatyczne sprawdzanie: użyj przycisku lub akcji." }
+        "data": { "scan_interval": "Częstotliwość sprawdzania", "backup_before_install": "Kopia zapasowa przed instalacją aktualizacji" },
+        "data_description": { "scan_interval": "Liczba godzin między dwoma automatycznymi sprawdzeniami. 0 wyłącza automatyczne sprawdzanie: użyj przycisku lub akcji.", "backup_before_install": "Przed Aktualizuj wszystko (lub akcją bez backup) utwórz automatyczną kopię zapasową Home Assistant, z jej ustawieniami w Ustawienia > System > Kopie zapasowe; jeśli się nie powiedzie, nic nie zostanie zainstalowane." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Instaluje aktualizacje repozytoriów Marketplace, jedną po drugiej, w tle, chyba że ustawiono Czekaj. Tylko administratorzy.",
       "fields": {
         "entity_id": { "name": "Encje aktualizacji", "description": "Encje aktualizacji Marketplace do zaktualizowania; pozostaw puste dla wszystkich repozytoriów z aktualizacją." },
-        "wait": { "name": "Czekaj", "description": "Czekaj, aż wszystkie aktualizacje zostaną zainstalowane, zanim akcja się zakończy; akcja kończy się wtedy błędem, jeśli nie udało się zainstalować aktualizacji." }
+        "wait": { "name": "Czekaj", "description": "Czekaj, aż wszystkie aktualizacje zostaną zainstalowane, zanim akcja się zakończy; akcja kończy się wtedy błędem, jeśli nie udało się zainstalować aktualizacji." },
+        "backup": { "name": "Najpierw kopia zapasowa", "description": "Utwórz automatyczną kopię zapasową Home Assistant przed instalacją; nic nie zostanie zainstalowane, jeśli się nie powiedzie. Zostaw puste, aby użyć opcji integracji." }
       }
     }
   },
