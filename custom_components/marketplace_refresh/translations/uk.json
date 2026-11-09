@@ -91,6 +91,7 @@
     "install_running": { "message": "Оновлення вже встановлюються." },
     "check_while_installing": { "message": "Триває встановлення оновлень: перевірте оновлення після його завершення." },
     "install_failed": { "message": "Не вдалося встановити {failed}." },
-    "install_cancelled": { "message": "Встановлення скасовано (Marketplace Refresh було перезавантажено або видалено)." }
+    "install_cancelled": { "message": "Встановлення скасовано (Marketplace Refresh було перезавантажено або видалено)." },
+    "rate_limit_low": { "message": "Залишилося замало запитів GitHub для перевірки всіх репозиторіїв (залишилося {remaining}, потрібно {needed}): перевірка повториться після скидання ліміту о {reset}." }
   }
 }

@@ -91,6 +91,7 @@
     "install_running": { "message": "A frissítések telepítése már folyamatban van." },
     "check_while_installing": { "message": "Frissítések telepítése folyamatban: a befejezésük után keressen frissítéseket." },
     "install_failed": { "message": "Nem sikerült telepíteni: {failed}." },
-    "install_cancelled": { "message": "A telepítések megszakadtak (a Marketplace Refresh újra lett töltve vagy el lett távolítva)." }
+    "install_cancelled": { "message": "A telepítések megszakadtak (a Marketplace Refresh újra lett töltve vagy el lett távolítva)." },
+    "rate_limit_low": { "message": "Nem maradt elég GitHub-kérés az összes tároló ellenőrzéséhez ({remaining} maradt, {needed} kell): az ellenőrzés a korlát {reset}-kor történő visszaállítása után újra lefut." }
   }
 }

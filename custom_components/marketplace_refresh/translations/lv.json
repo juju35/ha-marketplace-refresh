@@ -91,6 +91,7 @@
     "install_running": { "message": "Atjauninājumi jau tiek instalēti." },
     "check_while_installing": { "message": "Tiek instalēti atjauninājumi: meklējiet atjauninājumus, kad tie būs pabeigti." },
     "install_failed": { "message": "Neizdevās instalēt {failed}." },
-    "install_cancelled": { "message": "Instalēšana tika atcelta (Marketplace Refresh tika atkārtoti ielādēts vai noņemts)." }
+    "install_cancelled": { "message": "Instalēšana tika atcelta (Marketplace Refresh tika atkārtoti ielādēts vai noņemts)." },
+    "rate_limit_low": { "message": "Nepietiek atlikušo GitHub pieprasījumu visu repozitoriju pārbaudei (atlikuši {remaining}, vajag {needed}): pārbaude atkārtosies pēc limita atiestatīšanas plkst. {reset}." }
   }
 }

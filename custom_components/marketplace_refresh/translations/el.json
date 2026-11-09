@@ -91,6 +91,7 @@
     "install_running": { "message": "Ήδη εγκαθίστανται ενημερώσεις." },
     "check_while_installing": { "message": "Εγκαθίστανται ενημερώσεις: ελέγξτε για ενημερώσεις μόλις ολοκληρωθούν." },
     "install_failed": { "message": "Δεν ήταν δυνατή η εγκατάσταση: {failed}." },
-    "install_cancelled": { "message": "Οι εγκαταστάσεις ακυρώθηκαν (το Marketplace Refresh επαναφορτώθηκε ή αφαιρέθηκε)." }
+    "install_cancelled": { "message": "Οι εγκαταστάσεις ακυρώθηκαν (το Marketplace Refresh επαναφορτώθηκε ή αφαιρέθηκε)." },
+    "rate_limit_low": { "message": "Δεν απομένουν αρκετά αιτήματα GitHub για τον έλεγχο όλων των αποθετηρίων (απομένουν {remaining}, χρειάζονται {needed}): ο έλεγχος θα επαναληφθεί μετά τον μηδενισμό του ορίου στις {reset}." }
   }
 }

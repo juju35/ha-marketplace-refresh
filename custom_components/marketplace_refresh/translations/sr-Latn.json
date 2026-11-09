@@ -91,6 +91,7 @@
     "install_running": { "message": "Ažuriranja se već instaliraju." },
     "check_while_installing": { "message": "Ažuriranja se instaliraju: proverite ažuriranja kada se završe." },
     "install_failed": { "message": "Nije moguće instalirati {failed}." },
-    "install_cancelled": { "message": "Instalacije su otkazane (Marketplace Refresh je ponovo učitan ili uklonjen)." }
+    "install_cancelled": { "message": "Instalacije su otkazane (Marketplace Refresh je ponovo učitan ili uklonjen)." },
+    "rate_limit_low": { "message": "Nema dovoljno preostalih GitHub zahteva za proveru svih repozitorijuma ({remaining} preostalo, {needed} potrebno): provera će se ponoviti kada se ograničenje resetuje u {reset}." }
   }
 }

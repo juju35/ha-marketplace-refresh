@@ -91,6 +91,7 @@
     "install_running": { "message": "Ya se están instalando actualizaciones." },
     "check_while_installing": { "message": "Se están instalando actualizaciones: busca actualizaciones cuando terminen." },
     "install_failed": { "message": "No se pudo instalar {failed}." },
-    "install_cancelled": { "message": "Las instalaciones se cancelaron (Marketplace Refresh se recargó o se eliminó)." }
+    "install_cancelled": { "message": "Las instalaciones se cancelaron (Marketplace Refresh se recargó o se eliminó)." },
+    "rate_limit_low": { "message": "No quedan suficientes solicitudes de GitHub para comprobar todos los repositorios ({remaining} restantes, {needed} necesarias): la comprobación se repetirá cuando el límite se restablezca a las {reset}." }
   }
 }

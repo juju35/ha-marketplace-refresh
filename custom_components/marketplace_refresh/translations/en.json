@@ -91,6 +91,7 @@
     "install_running": { "message": "Updates are already being installed." },
     "check_while_installing": { "message": "Updates are being installed: check for updates once they are done." },
     "install_failed": { "message": "Could not install {failed}." },
-    "install_cancelled": { "message": "The installs were cancelled (Marketplace Refresh was reloaded or removed)." }
+    "install_cancelled": { "message": "The installs were cancelled (Marketplace Refresh was reloaded or removed)." },
+    "rate_limit_low": { "message": "Not enough GitHub requests left to check every repository ({remaining} left, {needed} needed): the check runs again after the limit resets at {reset}." }
   }
 }

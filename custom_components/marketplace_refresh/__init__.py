@@ -220,8 +220,12 @@ def _async_schedule(
 
     @callback
     def retry() -> None:
-        # Often temporary (Marketplace rate-limited or still starting, GitHub down): try again within the hour.
-        schedule(dt_util.utcnow() + min(interval, RETRY_INTERVAL))
+        # Often temporary (Marketplace rate-limited or still starting, GitHub down): try again within the hour,
+        # or a minute after GitHub's rate limit resets when the check was not started for lack of requests left.
+        due = dt_util.utcnow() + min(interval, RETRY_INTERVAL)
+        if refresher.retry_after is not None:
+            due = max(refresher.retry_after + timedelta(minutes=1), dt_util.utcnow() + timedelta(minutes=1))
+        schedule(due)
 
     @callback
     def on_done() -> None:

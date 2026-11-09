@@ -91,6 +91,7 @@
     "install_running": { "message": "Der installeres allerede opdateringer." },
     "check_while_installing": { "message": "Der installeres opdateringer: søg efter opdateringer, når de er færdige." },
     "install_failed": { "message": "Kunne ikke installere {failed}." },
-    "install_cancelled": { "message": "Installationerne blev annulleret (Marketplace Refresh blev genindlæst eller fjernet)." }
+    "install_cancelled": { "message": "Installationerne blev annulleret (Marketplace Refresh blev genindlæst eller fjernet)." },
+    "rate_limit_low": { "message": "Ikke nok GitHub-forespørgsler tilbage til at tjekke alle repositories ({remaining} tilbage, {needed} nødvendige): tjekket kører igen, når grænsen nulstilles kl. {reset}." }
   }
 }

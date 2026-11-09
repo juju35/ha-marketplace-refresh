@@ -32,7 +32,17 @@ class StatusSensor(MarketplaceRefreshEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options: ClassVar[list[str]] = [STATE_IDLE, STATE_RUNNING, STATE_ERROR]
     # Lists that change at every repository checked or installed: kept out of the recorder.
-    _unrecorded_attributes = frozenset({"failed", "not_checked", "checking", "installing", "install_failed"})
+    _unrecorded_attributes = frozenset(
+        {
+            "failed",
+            "not_checked",
+            "checking",
+            "installing",
+            "install_failed",
+            "rate_limit_remaining",
+            "rate_limit_reset",
+        }
+    )
 
     @property
     def native_value(self) -> str:
@@ -52,6 +62,9 @@ class StatusSensor(MarketplaceRefreshEntity, SensorEntity):
             "installing": list(r.installing),
             "install_failed": list(r.install_failed),
             "github_connected": r.github_connected,
+            # GitHub's rate limit as read at the last check (None without a GitHub account)
+            "rate_limit_remaining": r.rate_limit_remaining,
+            "rate_limit_reset": r.rate_limit_reset.isoformat() if r.rate_limit_reset else None,
         }
 
 

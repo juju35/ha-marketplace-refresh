@@ -91,6 +91,7 @@
     "install_running": { "message": "Posodobitve se že nameščajo." },
     "check_while_installing": { "message": "Posodobitve se nameščajo: preverite posodobitve, ko bo nameščanje končano." },
     "install_failed": { "message": "Ni bilo mogoče namestiti: {failed}." },
-    "install_cancelled": { "message": "Nameščanja so bila preklicana (Marketplace Refresh je bil znova naložen ali odstranjen)." }
+    "install_cancelled": { "message": "Nameščanja so bila preklicana (Marketplace Refresh je bil znova naložen ali odstranjen)." },
+    "rate_limit_low": { "message": "Ni dovolj preostalih zahtev GitHub za preverjanje vseh repozitorijev (preostalo {remaining}, potrebnih {needed}): preverjanje se ponovi po ponastavitvi omejitve ob {reset}." }
   }
 }

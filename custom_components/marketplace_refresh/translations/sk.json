@@ -91,6 +91,7 @@
     "install_running": { "message": "Aktualizácie sa už inštalujú." },
     "check_while_installing": { "message": "Inštalujú sa aktualizácie: skontrolujte aktualizácie, keď sa dokončia." },
     "install_failed": { "message": "Nepodarilo sa nainštalovať {failed}." },
-    "install_cancelled": { "message": "Inštalácie boli zrušené (Marketplace Refresh bol znova načítaný alebo odstránený)." }
+    "install_cancelled": { "message": "Inštalácie boli zrušené (Marketplace Refresh bol znova načítaný alebo odstránený)." },
+    "rate_limit_low": { "message": "Nezostáva dosť požiadaviek GitHub na kontrolu všetkých repozitárov (zostáva {remaining}, treba {needed}): kontrola sa zopakuje po vynulovaní limitu o {reset}." }
   }
 }
