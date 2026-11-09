@@ -91,6 +91,7 @@
     "install_running": { "message": "Вече се инсталират актуализации." },
     "check_while_installing": { "message": "Инсталират се актуализации: проверете за актуализации, след като приключат." },
     "install_failed": { "message": "Неуспешно инсталиране на {failed}." },
-    "install_cancelled": { "message": "Инсталациите бяха отменени (Marketplace Refresh беше презареден или премахнат)." }
+    "install_cancelled": { "message": "Инсталациите бяха отменени (Marketplace Refresh беше презареден или премахнат)." },
+    "rate_limit_low": { "message": "Не остават достатъчно заявки към GitHub за проверка на всички хранилища ({remaining} остават, нужни са {needed}): проверката ще се повтори след нулирането на лимита в {reset}." }
   }
 }

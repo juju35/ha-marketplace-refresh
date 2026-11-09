@@ -91,6 +91,7 @@
     "install_running": { "message": "Uppdateringar installeras redan." },
     "check_while_installing": { "message": "Uppdateringar installeras: sök efter uppdateringar när de är klara." },
     "install_failed": { "message": "Kunde inte installera {failed}." },
-    "install_cancelled": { "message": "Installationerna avbröts (Marketplace Refresh lästes in på nytt eller togs bort)." }
+    "install_cancelled": { "message": "Installationerna avbröts (Marketplace Refresh lästes in på nytt eller togs bort)." },
+    "rate_limit_low": { "message": "Inte tillräckligt med GitHub-förfrågningar kvar för att kontrollera alla repositories ({remaining} kvar, {needed} behövs): kontrollen körs igen när gränsen återställs kl. {reset}." }
   }
 }

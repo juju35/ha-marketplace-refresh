@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.config_entries import ConfigEntryState
@@ -1267,3 +1267,70 @@ async def test_new_interval_drops_the_time_set_before(hass, fake_marketplace, fr
     await hass.async_block_till_done()
     due = dt_util.parse_datetime(hass.states.get(LAST_CHECK).attributes["next_check"])
     assert due == since + timedelta(hours=48)
+
+
+def _rate_limit(marketplace, remaining: int, reset: datetime) -> AsyncMock:
+    """GitHub's rate limit as the Marketplace's client answers it (githubapi.rate_limit, async_github_api_method)."""
+    core = SimpleNamespace(remaining=remaining, reset=int(reset.timestamp()))
+    marketplace.githubapi = SimpleNamespace(rate_limit=object())
+    method = AsyncMock(return_value=SimpleNamespace(data=SimpleNamespace(resources=SimpleNamespace(core=core))))
+    marketplace.async_github_api_method = method
+    return method
+
+
+async def test_check_not_started_without_enough_github_requests(hass, fake_marketplace, freezer):
+    """3 repositories need 30 requests above the Marketplace's 1000 reserve: with 1020 left, no check is started."""
+    entry = await _setup(hass, hours=24)
+    reset = dt_util.utcnow() + timedelta(minutes=20)
+    _rate_limit(fake_marketplace, 1020, reset)
+    with pytest.raises(HomeAssistantError, match="1020 left, 1030 needed"):
+        await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
+    for repo in fake_marketplace.repositories.list_installed:
+        repo.update_repository.assert_not_awaited()
+    state = hass.states.get(STATUS)
+    assert state.state == "error"
+    assert state.attributes["rate_limit_remaining"] == 1020
+    assert state.attributes["rate_limit_reset"] == reset.replace(microsecond=0).isoformat()
+    # Tried again a minute after the reset, not an hour later.
+    core = fake_marketplace.async_github_api_method.return_value.data.resources.core
+    core.remaining = 5000
+    freezer.tick(timedelta(minutes=20, seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    fake_marketplace.repositories.list_installed[0].update_repository.assert_not_awaited()
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await entry.runtime_data.async_wait()
+    fake_marketplace.repositories.list_installed[0].update_repository.assert_awaited_once()
+    assert hass.states.get(STATUS).state == "idle"
+
+
+async def test_check_with_enough_github_requests_reads_what_is_left(hass, fake_marketplace):
+    await _setup(hass)
+    method = _rate_limit(fake_marketplace, 1030, dt_util.utcnow() + timedelta(minutes=30))
+    await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
+    for repo in fake_marketplace.repositories.list_installed:
+        repo.update_repository.assert_awaited_once()
+    # Read before (the guard) and after (what the check spent)
+    assert method.await_count == 2
+    assert hass.states.get(STATUS).attributes["rate_limit_remaining"] == 1030
+
+
+async def test_rate_limit_unreadable_check_goes_on(hass, fake_marketplace):
+    await _setup(hass)
+    _rate_limit(fake_marketplace, 0, dt_util.utcnow()).side_effect = RuntimeError("GitHub down")
+    await hass.services.async_call(DOMAIN, "check_updates", {"wait": True}, blocking=True)
+    fake_marketplace.repositories.list_installed[0].update_repository.assert_awaited_once()
+    assert hass.states.get(STATUS).attributes["rate_limit_remaining"] is None
+
+
+async def test_check_repository_refused_without_enough_github_requests(hass, fake_marketplace):
+    await _setup(hass)
+    parcel = fake_marketplace.repositories.list_installed[1]
+    entity_id = _marketplace_update_entity(hass, parcel)
+    _rate_limit(fake_marketplace, 1005, dt_util.utcnow() + timedelta(minutes=5))
+    with pytest.raises(HomeAssistantError, match="1005 left, 1010 needed"):
+        await hass.services.async_call(DOMAIN, "check_repository", {"entity_id": entity_id}, blocking=True)
+    parcel.update_repository.assert_not_awaited()
+    assert hass.states.get(STATUS).attributes["checking"] == []

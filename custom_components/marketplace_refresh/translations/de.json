@@ -91,6 +91,7 @@
     "install_running": { "message": "Es werden bereits Updates installiert." },
     "check_while_installing": { "message": "Es werden gerade Updates installiert: prüfe nach Updates, sobald sie fertig sind." },
     "install_failed": { "message": "{failed} konnte nicht installiert werden." },
-    "install_cancelled": { "message": "Die Installationen wurden abgebrochen (Marketplace Refresh wurde neu geladen oder entfernt)." }
+    "install_cancelled": { "message": "Die Installationen wurden abgebrochen (Marketplace Refresh wurde neu geladen oder entfernt)." },
+    "rate_limit_low": { "message": "Nicht genug GitHub-Anfragen übrig, um alle Repositories zu prüfen ({remaining} übrig, {needed} nötig): Die Prüfung läuft erneut, nachdem das Limit um {reset} zurückgesetzt wurde." }
   }
 }

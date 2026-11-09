@@ -77,6 +77,13 @@ def _loaded_marketplace(hass: HomeAssistant) -> Any | None:
     return getattr(entries[0], "runtime_data", None) if entries else None
 
 
+# GitHub's rate limit: the Marketplace disables itself below RATE_LIMIT_RESERVE requests left, and counts about
+# RATE_LIMIT_PER_REPOSITORY requests for refreshing a repository (its own figures). A check that would go below the
+# reserve is not started: it would stop halfway with the Marketplace disabled until the limit resets.
+RATE_LIMIT_RESERVE = 1000
+RATE_LIMIT_PER_REPOSITORY = 10
+
+
 # Waits before installing a failed update again, one per retry. A release asset GitHub fails to serve (a 500 on one of
 # a card's 22 files) fails the whole install; a little later the same download goes through.
 INSTALL_RETRY_DELAYS: tuple[float, ...] = (30, 90)
@@ -174,6 +181,11 @@ class MarketplaceRefresher:
         # Whether a GitHub account was connected to the Marketplace at the last check: without one,
         # only the catalog is read, and the repositories added from a link can't be checked.
         self.github_connected: bool | None = None
+        # GitHub's rate limit as last read (requests left, when it resets); None when not read (no GitHub account).
+        self.rate_limit_remaining: int | None = None
+        self.rate_limit_reset: datetime | None = None
+        # Set when a check was not started for lack of requests left: the next one waits for the reset.
+        self.retry_after: datetime | None = None
         # Update entities of the repositories checked on their own (check_repository).
         self.checking: set[str] = set()
         # Repositories being checked on their own, by repository id: resolved with the error (or None) once checked,
@@ -341,6 +353,8 @@ class MarketplaceRefresher:
             elif key not in own_keys:
                 own_keys.add(key)
                 own[entity_id] = repo
+        if own:
+            await self.async_ensure_rate_limit(marketplace, len(own))
         futures = {str(repo.data.id): self.hass.loop.create_future() for repo in own.values()}
         self._single.update(futures)
         self.checking.update(own)
@@ -556,6 +570,42 @@ class MarketplaceRefresher:
             return False
         return True
 
+    async def async_read_rate_limit(self, marketplace: Any) -> int | None:
+        """Read GitHub's rate limit through the Marketplace's client (the request itself costs nothing).
+
+        Requests left, or None: no GitHub account connected, a Marketplace without that client, or GitHub not
+        answering (the check goes on as before then).
+        """
+        api = getattr(marketplace, "githubapi", None)
+        method = getattr(marketplace, "async_github_api_method", None)
+        if not marketplace.github_connected or api is None or method is None or not hasattr(api, "rate_limit"):
+            return None
+        try:
+            core = (await method(api.rate_limit)).data.resources.core
+            self.rate_limit_remaining = int(core.remaining or 0)
+            self.rate_limit_reset = dt_util.utc_from_timestamp(core.reset) if core.reset else None
+        except Exception as err:  # noqa: BLE001 - only a guard: without it the check runs as before
+            _LOGGER.debug("Could not read GitHub's rate limit: %s", err)
+            return None
+        return self.rate_limit_remaining
+
+    async def async_ensure_rate_limit(self, marketplace: Any, repositories: int) -> None:
+        """Raise when refreshing that many repositories would bring GitHub's rate limit below the reserve."""
+        remaining = await self.async_read_rate_limit(marketplace)
+        needed = repositories * RATE_LIMIT_PER_REPOSITORY
+        if remaining is None or remaining - RATE_LIMIT_RESERVE >= needed:
+            return
+        reset = dt_util.as_local(self.rate_limit_reset).strftime("%H:%M") if self.rate_limit_reset else "?"
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="rate_limit_low",
+            translation_placeholders={
+                "remaining": str(remaining),
+                "needed": str(needed + RATE_LIMIT_RESERVE),
+                "reset": reset,
+            },
+        )
+
     async def _async_run(self) -> None:
         try:
             marketplace = _marketplace(self.hass)
@@ -564,6 +614,14 @@ class MarketplaceRefresher:
             self.total = len(repositories)
             self.github_connected = bool(marketplace.github_connected)
             self._notify()
+            self.retry_after = None
+            if self.github_connected:
+                try:
+                    await self.async_ensure_rate_limit(marketplace, len(repositories))
+                except HomeAssistantError:
+                    # Tried again once the limit has reset rather than within the hour.
+                    self.retry_after = self.rate_limit_reset
+                    raise
             _LOGGER.info("Checking %s Marketplace repositories for updates", self.total)
 
             # The catalog carries the latest version of every repository it lists: one request per
@@ -586,6 +644,8 @@ class MarketplaceRefresher:
             # The update entities only change when their coordinator says so.
             for coordinator in marketplace.coordinators.values():
                 coordinator.async_update_listeners()
+            # What the check spent: shown with the status.
+            await self.async_read_rate_limit(marketplace)
             pending = sorted(repo.data.full_name for repo in repositories if getattr(repo, "pending_update", False))
             self.updates = len(pending)
             self._fire_updates_found(pending)

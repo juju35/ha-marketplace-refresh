@@ -91,6 +91,7 @@
     "install_running": { "message": "Обновления уже устанавливаются." },
     "check_while_installing": { "message": "Идёт установка обновлений: проверьте обновления после её завершения." },
     "install_failed": { "message": "Не удалось установить {failed}." },
-    "install_cancelled": { "message": "Установка отменена (Marketplace Refresh был перезагружен или удалён)." }
+    "install_cancelled": { "message": "Установка отменена (Marketplace Refresh был перезагружен или удалён)." },
+    "rate_limit_low": { "message": "Осталось недостаточно запросов GitHub для проверки всех репозиториев (осталось {remaining}, нужно {needed}): проверка повторится после сброса лимита в {reset}." }
   }
 }

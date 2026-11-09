@@ -91,6 +91,7 @@
     "install_running": { "message": "Actualizările se instalează deja." },
     "check_while_installing": { "message": "Se instalează actualizări: căutați actualizări după ce s-au terminat." },
     "install_failed": { "message": "Nu s-a putut instala {failed}." },
-    "install_cancelled": { "message": "Instalările au fost anulate (Marketplace Refresh a fost reîncărcat sau eliminat)." }
+    "install_cancelled": { "message": "Instalările au fost anulate (Marketplace Refresh a fost reîncărcat sau eliminat)." },
+    "rate_limit_low": { "message": "Nu au rămas destule cereri GitHub pentru a verifica toate depozitele ({remaining} rămase, {needed} necesare): verificarea se reia după resetarea limitei la {reset}." }
   }
 }

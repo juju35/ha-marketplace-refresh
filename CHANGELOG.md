@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.0 - 2026-11-09
+
+### Features
+- **GitHub rate limit**: before a check, the requests left are read (that request is free). A check that would bring them under the Marketplace's reserve (1,000 left; about 10 per repository) is not started — it would stop halfway, the Marketplace disabling itself until the limit resets — and fails with the requests left and needed and the reset time; the next one runs a minute after the reset instead of an hour later. `check_repository` is refused the same way. The status sensor shows `rate_limit_remaining` and `rate_limit_reset` (not recorded). Without a GitHub account, or when the limit can't be read, checks run as before.
+
 ## 2.5.0 - 2026-11-09
 
 ### Features
