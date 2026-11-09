@@ -22,7 +22,7 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
-from custom_components.marketplace_refresh.const import CARD_URL, CONF_SCAN_INTERVAL, DOMAIN
+from custom_components.marketplace_refresh.const import CARD_URL, CONF_BACKUP_BEFORE_INSTALL, CONF_SCAN_INTERVAL, DOMAIN
 
 from .conftest import make_repo
 
@@ -60,7 +60,7 @@ async def test_options_flow_changes_interval(hass, fake_marketplace):
     result = await hass.config_entries.options.async_configure(result["flow_id"], {CONF_SCAN_INTERVAL: 6})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
-    assert entry.options == {CONF_SCAN_INTERVAL: 6}
+    assert entry.options == {CONF_SCAN_INTERVAL: 6, CONF_BACKUP_BEFORE_INSTALL: False}
     assert entry.state is ConfigEntryState.LOADED
 
 
@@ -894,6 +894,66 @@ async def test_install_updates_installs_every_update_one_by_one(hass, fake_marke
     assert state.attributes["installing"] == []
     assert state.attributes["install_failed"] == []
     assert hass.states.get(BUTTON).state != "unavailable"
+
+
+def _fake_backup(hass: HomeAssistant, calls: list[str], fail: bool = False) -> None:
+    """backup.create_automatic stand-in, recorded in the same list as the installs."""
+
+    async def create(call) -> None:
+        calls.append("backup")
+        if fail:
+            raise HomeAssistantError("no space left")
+
+    hass.services.async_register("backup", "create_automatic", create)
+
+
+async def test_install_updates_backs_up_first_when_asked(hass, fake_marketplace):
+    await _setup(hass)
+    _marketplace_update_entities(hass, {"mushroom": "on", "card_mod": "on"})
+    calls = _fake_update_install(hass)
+    _fake_backup(hass, calls)
+    await hass.services.async_call(DOMAIN, "install_updates", {"wait": True, "backup": True}, blocking=True)
+    assert calls == ["backup", "update.card_mod", "update.mushroom"]
+
+
+async def test_install_updates_follows_the_backup_option(hass, fake_marketplace):
+    entry = await _setup(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SCAN_INTERVAL: 24, CONF_BACKUP_BEFORE_INSTALL: True}
+    )
+    await hass.async_block_till_done()
+    _marketplace_update_entities(hass, {"mushroom": "on"})
+    calls = _fake_update_install(hass)
+    _fake_backup(hass, calls)
+    await hass.services.async_call(DOMAIN, "install_updates", {"wait": True}, blocking=True)
+    assert calls == ["backup", "update.mushroom"]
+    # The action can still say otherwise.
+    hass.states.async_set("update.mushroom", "on", {"title": "Mushroom"})
+    calls.clear()
+    await hass.services.async_call(DOMAIN, "install_updates", {"wait": True, "backup": False}, blocking=True)
+    assert calls == ["update.mushroom"]
+
+
+async def test_a_failed_backup_installs_nothing(hass, fake_marketplace):
+    await _setup(hass)
+    _marketplace_update_entities(hass, {"mushroom": "on"})
+    calls = _fake_update_install(hass)
+    _fake_backup(hass, calls, fail=True)
+    with pytest.raises(HomeAssistantError, match="Backup before installing: no space left"):
+        await hass.services.async_call(DOMAIN, "install_updates", {"wait": True, "backup": True}, blocking=True)
+    assert calls == ["backup"]
+    assert hass.states.get("update.mushroom").state == "on"
+    assert hass.states.get(STATUS).attributes["install_failed"] == ["Backup before installing: no space left"]
+
+
+async def test_no_backup_without_updates_to_install(hass, fake_marketplace):
+    await _setup(hass)
+    _marketplace_update_entities(hass, {"mushroom": "off"})
+    calls = _fake_update_install(hass)
+    _fake_backup(hass, calls)
+    await hass.services.async_call(DOMAIN, "install_updates", {"wait": True, "backup": True}, blocking=True)
+    assert calls == []
 
 
 async def test_install_updates_only_the_entities_given(hass, fake_marketplace):

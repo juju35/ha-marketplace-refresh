@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Opties van Marketplace Refresh",
-        "data": { "scan_interval": "Controle-interval" },
-        "data_description": { "scan_interval": "Uren tussen twee automatische controles. 0 zet de automatische controle uit: gebruik de knop of de actie." }
+        "data": { "scan_interval": "Controle-interval", "backup_before_install": "Back-up maken vóór het installeren van updates" },
+        "data_description": { "scan_interval": "Uren tussen twee automatische controles. 0 zet de automatische controle uit: gebruik de knop of de actie.", "backup_before_install": "Vóór Alles bijwerken (of de actie zonder backup) de automatische back-up van Home Assistant maken, met de instellingen onder Instellingen > Systeem > Back-ups; mislukt die, dan wordt niets geïnstalleerd." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Installeert de updates van de Marketplace-repository's, de een na de ander, op de achtergrond tenzij Wachten is ingesteld. Alleen beheerders.",
       "fields": {
         "entity_id": { "name": "Update-entiteiten", "description": "Bij te werken Marketplace-update-entiteiten; laat leeg voor alle repository's met een update." },
-        "wait": { "name": "Wachten", "description": "Wachten tot alle updates zijn geïnstalleerd voordat de actie eindigt; de actie mislukt dan als een update niet kon worden geïnstalleerd." }
+        "wait": { "name": "Wachten", "description": "Wachten tot alle updates zijn geïnstalleerd voordat de actie eindigt; de actie mislukt dan als een update niet kon worden geïnstalleerd." },
+        "backup": { "name": "Eerst een back-up", "description": "De automatische back-up van Home Assistant maken vóór het installeren; mislukt die, dan wordt niets geïnstalleerd. Leeg laten om de optie van de integratie te volgen." }
       }
     }
   },

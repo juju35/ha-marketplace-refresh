@@ -6,10 +6,11 @@ from typing import Final
 
 DOMAIN: Final = "marketplace_refresh"
 # Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
-VERSION: Final = "2.3.0"
+VERSION: Final = "2.4.0"
 MARKETPLACE_DOMAIN: Final = "marketplace"
 
 CONF_SCAN_INTERVAL: Final = "scan_interval"
+CONF_BACKUP_BEFORE_INSTALL: Final = "backup_before_install"
 # Hours between two automatic checks; 0 turns the automatic check off.
 DEFAULT_SCAN_INTERVAL: Final = 24
 MAX_SCAN_INTERVAL: Final = 168
@@ -31,3 +32,31 @@ STATE_ERROR: Final = "error"
 
 # The card bundled with the integration, served by Home Assistant and added to the dashboard resources.
 CARD_URL: Final = f"/{DOMAIN}/marketplace-refresh-card.js"
+
+# Name of the backup in the list of updates that could not be installed ("<name>: <error>"), in Home Assistant's
+# language: the backup failed, so nothing was installed.
+BACKUP_FAILED: Final = {
+    "en": "Backup before installing",
+    "fr": "Sauvegarde avant l'installation",
+    "de": "Backup vor der Installation",
+    "es": "Copia de seguridad antes de instalar",
+    "sr": "Резервна копија пре инсталације",
+    "sr-Latn": "Rezervna kopija pre instalacije",
+    "it": "Backup prima dell'installazione",
+    "nl": "Back-up vóór de installatie",
+    "pt": "Cópia de segurança antes da instalação",
+    "pt-BR": "Backup antes da instalação",
+    "pl": "Kopia zapasowa przed instalacją",
+    "ro": "Copie de rezervă înainte de instalare",
+    "da": "Backup før installation",
+    "sv": "Säkerhetskopia före installation",
+    "bg": "Резервно копие преди инсталиране",
+    "ru": "Резервная копия перед установкой",
+    "uk": "Резервна копія перед встановленням",
+    "hu": "Biztonsági mentés telepítés előtt",
+    "sk": "Záloha pred inštaláciou",
+    "cs": "Záloha před instalací",
+    "sl": "Varnostna kopija pred namestitvijo",
+    "lv": "Rezerves kopija pirms instalēšanas",
+    "el": "Αντίγραφο ασφαλείας πριν από την εγκατάσταση",
+}

@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Alternativ för Marketplace Refresh",
-        "data": { "scan_interval": "Kontrollintervall" },
-        "data_description": { "scan_interval": "Timmar mellan två automatiska kontroller. 0 stänger av den automatiska kontrollen: använd knappen eller åtgärden." }
+        "data": { "scan_interval": "Kontrollintervall", "backup_before_install": "Säkerhetskopiera före installation av uppdateringar" },
+        "data_description": { "scan_interval": "Timmar mellan två automatiska kontroller. 0 stänger av den automatiska kontrollen: använd knappen eller åtgärden.", "backup_before_install": "Före Uppdatera alla (eller åtgärden utan backup) skapas Home Assistants automatiska säkerhetskopia med inställningarna i Inställningar > System > Säkerhetskopior; misslyckas den installeras inget." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Installerar uppdateringarna för Marketplace-repositorierna, en i taget, i bakgrunden om inte wait är angivet. Endast administratörer.",
       "fields": {
         "entity_id": { "name": "Uppdateringsentiteter", "description": "Marketplace-uppdateringsentiteter som ska uppdateras; lämna tomt för alla repositorier med en uppdatering." },
-        "wait": { "name": "Vänta", "description": "Vänta tills alla uppdateringar har installerats innan åtgärden avslutas; åtgärden misslyckas då om en uppdatering inte kunde installeras." }
+        "wait": { "name": "Vänta", "description": "Vänta tills alla uppdateringar har installerats innan åtgärden avslutas; åtgärden misslyckas då om en uppdatering inte kunde installeras." },
+        "backup": { "name": "Säkerhetskopiera först", "description": "Skapa Home Assistants automatiska säkerhetskopia före installationen; inget installeras om den misslyckas. Lämna tomt för att följa integrationens alternativ." }
       }
     }
   },

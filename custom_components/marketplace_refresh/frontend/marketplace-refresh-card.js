@@ -4,7 +4,7 @@
  * Served and added to the dashboard resources by the integration.
  * https://github.com/juju35/ha-marketplace-refresh
  */
-var MARKETPLACE_REFRESH_CARD_VERSION = '2.3.0';
+var MARKETPLACE_REFRESH_CARD_VERSION = '2.4.0';
 
 const HR_I18N = {
   en: {

@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Marketplace Refresh beállításai",
-        "data": { "scan_interval": "Ellenőrzési időköz" },
-        "data_description": { "scan_interval": "Két automatikus ellenőrzés között eltelt órák száma. A 0 kikapcsolja az automatikus ellenőrzést: használja a gombot vagy a műveletet." }
+        "data": { "scan_interval": "Ellenőrzési időköz", "backup_before_install": "Biztonsági mentés a frissítések telepítése előtt" },
+        "data_description": { "scan_interval": "Két automatikus ellenőrzés között eltelt órák száma. A 0 kikapcsolja az automatikus ellenőrzést: használja a gombot vagy a műveletet.", "backup_before_install": "Az Összes frissítése (vagy a backup nélküli művelet) előtt elkészül a Home Assistant automatikus biztonsági mentése a Beállítások > Rendszer > Biztonsági mentések beállításaival; ha nem sikerül, semmi sem települ." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Egymás után telepíti a Marketplace-tárolók frissítéseit, a háttérben, hacsak nincs beállítva a wait. Csak rendszergazdák számára.",
       "fields": {
         "entity_id": { "name": "Frissítési entitások", "description": "A frissítendő Marketplace-frissítési entitások; hagyja üresen az összes frissíthető tárolóhoz." },
-        "wait": { "name": "Várakozás", "description": "A művelet befejezése előtt megvárja, amíg minden frissítés települ; ekkor a művelet sikertelen, ha egy frissítést nem sikerült telepíteni." }
+        "wait": { "name": "Várakozás", "description": "A művelet befejezése előtt megvárja, amíg minden frissítés települ; ekkor a művelet sikertelen, ha egy frissítést nem sikerült telepíteni." },
+        "backup": { "name": "Előbb biztonsági mentés", "description": "A Home Assistant automatikus biztonsági mentésének elkészítése telepítés előtt; ha nem sikerül, semmi sem települ. Hagyd üresen az integráció beállításának követéséhez." }
       }
     }
   },

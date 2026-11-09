@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Možnosti Marketplace Refresh",
-        "data": { "scan_interval": "Interval kontroly" },
-        "data_description": { "scan_interval": "Počet hodin mezi dvěma automatickými kontrolami. 0 vypne automatickou kontrolu: použijte tlačítko nebo akci." }
+        "data": { "scan_interval": "Interval kontroly", "backup_before_install": "Zálohovat před instalací aktualizací" },
+        "data_description": { "scan_interval": "Počet hodin mezi dvěma automatickými kontrolami. 0 vypne automatickou kontrolu: použijte tlačítko nebo akci.", "backup_before_install": "Před Aktualizovat vše (nebo akcí bez backup) se vytvoří automatická záloha Home Assistant s nastavením z Nastavení > Systém > Zálohy; pokud selže, nic se nenainstaluje." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Instaluje aktualizace repozitářů Marketplace jednu po druhé, na pozadí, pokud není nastaveno wait. Pouze pro správce.",
       "fields": {
         "entity_id": { "name": "Entity aktualizace", "description": "Entity aktualizace Marketplace, které se mají aktualizovat; ponechte prázdné pro všechny repozitáře s aktualizací." },
-        "wait": { "name": "Čekat", "description": "Počkat, než budou nainstalovány všechny aktualizace, a teprve pak akci ukončit; akce pak selže, pokud se některou aktualizaci nepodařilo nainstalovat." }
+        "wait": { "name": "Čekat", "description": "Počkat, než budou nainstalovány všechny aktualizace, a teprve pak akci ukončit; akce pak selže, pokud se některou aktualizaci nepodařilo nainstalovat." },
+        "backup": { "name": "Nejprve záloha", "description": "Vytvořit automatickou zálohu Home Assistant před instalací; pokud selže, nic se nenainstaluje. Ponechte prázdné, aby platila možnost integrace." }
       }
     }
   },

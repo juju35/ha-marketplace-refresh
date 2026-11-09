@@ -8,12 +8,20 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
 )
 
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN, MARKETPLACE_DOMAIN, MAX_SCAN_INTERVAL
+from .const import (
+    CONF_BACKUP_BEFORE_INSTALL,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MARKETPLACE_DOMAIN,
+    MAX_SCAN_INTERVAL,
+)
 
 
 def _interval_schema(default: int) -> vol.Schema:
@@ -57,10 +65,23 @@ class MarketplaceRefreshConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class MarketplaceRefreshOptionsFlow(OptionsFlow):
-    """Change the interval between two automatic checks."""
+    """Change the interval between two automatic checks, and the backup before installing updates."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
-            return self.async_create_entry(data={CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL])})
-        current = int(self.config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
-        return self.async_show_form(step_id="init", data_schema=_interval_schema(current))
+            return self.async_create_entry(
+                data={
+                    CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
+                    CONF_BACKUP_BEFORE_INSTALL: bool(user_input.get(CONF_BACKUP_BEFORE_INSTALL, False)),
+                }
+            )
+        options = self.config_entry.options
+        current = int(options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        schema = _interval_schema(current).extend(
+            {
+                vol.Required(
+                    CONF_BACKUP_BEFORE_INSTALL, default=bool(options.get(CONF_BACKUP_BEFORE_INSTALL, False))
+                ): BooleanSelector()
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

@@ -18,8 +18,8 @@
     "step": {
       "init": {
         "title": "Opzioni di Marketplace Refresh",
-        "data": { "scan_interval": "Intervallo di verifica" },
-        "data_description": { "scan_interval": "Ore tra due verifiche automatiche. 0 disattiva la verifica automatica: usa il pulsante o l'azione." }
+        "data": { "scan_interval": "Intervallo di verifica", "backup_before_install": "Backup prima di installare gli aggiornamenti" },
+        "data_description": { "scan_interval": "Ore tra due verifiche automatiche. 0 disattiva la verifica automatica: usa il pulsante o l'azione.", "backup_before_install": "Prima di Aggiorna tutto (o dell'azione senza backup), crea il backup automatico di Home Assistant, con le sue impostazioni in Impostazioni > Sistema > Backup; se non riesce, non viene installato nulla." }
       }
     }
   },
@@ -72,7 +72,8 @@
       "description": "Installa gli aggiornamenti dei repository Marketplace, uno dopo l'altro, in background a meno che non sia impostato Attendi. Solo amministratori.",
       "fields": {
         "entity_id": { "name": "Entità di aggiornamento", "description": "Entità di aggiornamento Marketplace da aggiornare; lascia vuoto per tutti i repository con un aggiornamento." },
-        "wait": { "name": "Attendi", "description": "Attendi che tutti gli aggiornamenti siano stati installati prima che l'azione termini; l'azione fallisce allora se un aggiornamento non è stato installato." }
+        "wait": { "name": "Attendi", "description": "Attendi che tutti gli aggiornamenti siano stati installati prima che l'azione termini; l'azione fallisce allora se un aggiornamento non è stato installato." },
+        "backup": { "name": "Prima il backup", "description": "Crea il backup automatico di Home Assistant prima di installare; non viene installato nulla se non riesce. Lascia vuoto per seguire l'opzione dell'integrazione." }
       }
     }
   },

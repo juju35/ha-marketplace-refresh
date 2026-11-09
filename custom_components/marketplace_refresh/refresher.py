@@ -40,6 +40,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    BACKUP_FAILED,
+    CONF_BACKUP_BEFORE_INSTALL,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -140,6 +142,8 @@ class MarketplaceRefresher:
         self.entry = entry
         # The automatic check's interval this entry was set up with (hours, 0 = off).
         self.scan_interval = int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        # Back up Home Assistant before installing updates, when the action doesn't say (the card's Update all).
+        self.backup_before_install = bool(entry.options.get(CONF_BACKUP_BEFORE_INSTALL, False))
         # The last full check and its result, kept across restarts for the interval and the sensors.
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, DOMAIN)
         # Called when a full check ends, whatever started it.
@@ -443,8 +447,14 @@ class MarketplaceRefresher:
         ]
 
     @callback
-    def async_start_install(self, entity_ids: list[str] | None, context: Context | None) -> None:
-        """Install the updates of these Marketplace update entities (else all), one by one, in the background."""
+    def async_start_install(
+        self, entity_ids: list[str] | None, context: Context | None, backup: bool | None = None
+    ) -> None:
+        """Install the updates of these Marketplace update entities (else all), one by one, in the background.
+
+        backup: create a backup first (Home Assistant's automatic backup, with its settings), and install nothing
+        if it fails; None follows the Back up before installing option.
+        """
         if self.installing_updates:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="install_running")
         _marketplace(self.hass)  # fail now, in the caller, if the Marketplace can't be used
@@ -452,7 +462,9 @@ class MarketplaceRefresher:
         self.install_failed = []
         # Tied to the entry, like the check: unloading it cancels the installs left.
         self._install_task = self.entry.async_create_background_task(
-            self.hass, self._async_install(context), "marketplace_refresh_install"
+            self.hass,
+            self._async_install(context, self.backup_before_install if backup is None else backup),
+            "marketplace_refresh_install",
         )
         self._notify()  # once the task is set: the button greys out
 
@@ -473,12 +485,14 @@ class MarketplaceRefresher:
                 translation_placeholders={"failed": "; ".join(self.install_failed)},
             )
 
-    async def _async_install(self, context: Context | None) -> None:
+    async def _async_install(self, context: Context | None, backup: bool = False) -> None:
         try:
             # A check running refreshes these repositories: install once it has ended, whatever its result.
             if self._task is not None:
                 with contextlib.suppress(HomeAssistantError):
                     await self.async_wait()
+            if backup and self.installing and not await self._async_backup(context):
+                return
             # One at a time: the Marketplace writes its data after each install.
             while self.installing:
                 entity_id = self.installing[0]
@@ -503,6 +517,18 @@ class MarketplaceRefresher:
             # A check due meanwhile runs now; not after an unload, which cancels this task.
             if self.on_install_done is not None and not _cancelling():
                 self.on_install_done()
+
+    async def _async_backup(self, context: Context | None) -> bool:
+        """Create Home Assistant's automatic backup (its settings: what, where, how many kept); False if it failed."""
+        try:
+            await self.hass.services.async_call("backup", "create_automatic", {}, blocking=True, context=context)
+        except Exception as err:  # noqa: BLE001 - reported like a failed install, nothing is installed
+            language = self.hass.config.language
+            name = BACKUP_FAILED.get(language) or BACKUP_FAILED.get(language.split("-")[0], BACKUP_FAILED["en"])
+            _LOGGER.warning("Backup before installing the updates failed, nothing installed: %s", err)
+            self.install_failed = [f"{name}: {err}"]
+            return False
+        return True
 
     async def _async_run(self) -> None:
         try:
