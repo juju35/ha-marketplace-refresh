@@ -53,8 +53,19 @@ type MarketplaceRefreshConfigEntry = ConfigEntry[MarketplaceRefresher]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Serve the card, load it on every dashboard, and register the actions (administrators only)."""
+    # The release splits the card translations into <file>.i18n.<lang>.js files (scripts/split-frontend.mjs):
+    # served next to the card, which fetches the one it needs. A git checkout has none.
+    languages = await hass.async_add_executor_job(_language_files, Path(__file__).parent / "frontend")
     await hass.http.async_register_static_paths(
-        [StaticPathConfig(CARD_URL, str(Path(__file__).parent / "frontend" / "marketplace-refresh-card.js"), True)]
+        [
+            StaticPathConfig(CARD_URL, str(Path(__file__).parent / "frontend" / "marketplace-refresh-card.js"), True),
+            *(
+                StaticPathConfig(
+                    f"{CARD_URL.rsplit('/', 1)[0]}/{name}", str(Path(__file__).parent / "frontend" / name), True
+                )
+                for name in languages
+            ),
+        ]
     )
 
     async def _register(_: Event | None = None) -> None:
@@ -262,3 +273,8 @@ async def _async_reload(hass: HomeAssistant, entry: MarketplaceRefreshConfigEntr
     if refresher.scan_interval != int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)):
         await refresher.async_forget_next_due()
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+def _language_files(frontend: Path) -> list[str]:
+    """The translation files the release split out of the frontend files, if any."""
+    return sorted(p.name for p in frontend.glob("*.i18n.*.js"))
