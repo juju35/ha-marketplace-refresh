@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.1 - 2026-11-09
+
+### Improvements
+- Card: with few GitHub requests left (under 1,500, as read at the last check), a line says how many and when the limit resets — the checks wait for it. Gone once it has reset.
+
 ## 2.6.0 - 2026-11-09
 
 ### Features

@@ -851,3 +851,13 @@ test('an update without a title is named after its device, not its bare friendly
   hass.devices = {};
   assert.match(html(render({}, hass)), /Update/);
 });
+
+test('few GitHub requests left: a line until the limit resets, nothing otherwise', () => {
+  const low = html(render({}, makeHass({ attrs: { rate_limit_remaining: 1020, rate_limit_reset: minutes(20) } })));
+  assert.match(low, /class="rate"/);
+  assert.match(low, /Few GitHub requests left \(1020\): checks wait until the limit resets in 20 minutes/);
+  // Plenty left, the reset passed, or no figure (no GitHub account): no line.
+  assert.doesNotMatch(html(render({}, makeHass({ attrs: { rate_limit_remaining: 4200, rate_limit_reset: minutes(20) } }))), /class="rate"/);
+  assert.doesNotMatch(html(render({}, makeHass({ attrs: { rate_limit_remaining: 300, rate_limit_reset: minutes(-5) } }))), /class="rate"/);
+  assert.doesNotMatch(html(render({}, makeHass({ attrs: { rate_limit_remaining: null, rate_limit_reset: null } }))), /class="rate"/);
+});

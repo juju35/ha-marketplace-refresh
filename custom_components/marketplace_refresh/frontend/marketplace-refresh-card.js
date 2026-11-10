@@ -4,7 +4,9 @@
  * Served and added to the dashboard resources by the integration.
  * https://github.com/juju35/ha-marketplace-refresh
  */
-var MARKETPLACE_REFRESH_CARD_VERSION = '2.6.0';
+// Requests left under which the card says the checks may wait for GitHub's limit to reset.
+const MR_RATE_LOW = 1500;
+var MARKETPLACE_REFRESH_CARD_VERSION = '2.6.1';
 
 const HR_I18N = {
   en: {
@@ -29,6 +31,7 @@ const HR_I18N = {
     failed_title: 'Could not be checked',
     no_github: 'GitHub isn’t connected to the Marketplace: the repositories added from a link couldn’t be checked',
     error_title: 'The last check failed',
+    rate_low: 'Few GitHub requests left ({n}): checks wait until the limit resets {d}',
     install_all: 'Update all ({n})',
     installing_one: 'Installing… {n} left',
     installing_many: 'Installing… {n} left',
@@ -79,6 +82,7 @@ const HR_I18N = {
     failed_title: 'Impossible à vérifier',
     no_github: 'GitHub n’est pas connecté au Marketplace : les dépôts ajoutés depuis un lien n’ont pas pu être vérifiés',
     error_title: 'La dernière vérification a échoué',
+    rate_low: 'Peu de requêtes GitHub restantes ({n}) : les vérifications attendent la remise à zéro {d}',
     install_all: 'Tout mettre à jour ({n})',
     installing_one: 'Installation… {n} restante',
     installing_many: 'Installation… {n} restantes',
@@ -129,6 +133,7 @@ const HR_I18N = {
     failed_title: 'Konnten nicht geprüft werden',
     no_github: 'GitHub ist nicht mit dem Marketplace verbunden: die über einen Link hinzugefügten Repositorys konnten nicht geprüft werden',
     error_title: 'Die letzte Prüfung ist fehlgeschlagen',
+    rate_low: 'Wenige GitHub-Anfragen übrig ({n}): Prüfungen warten bis zum Zurücksetzen {d}',
     install_all: 'Alle aktualisieren ({n})',
     installing_one: 'Installation… {n} übrig',
     installing_many: 'Installation… {n} übrig',
@@ -179,6 +184,7 @@ const HR_I18N = {
     failed_title: 'No se pudieron comprobar',
     no_github: 'GitHub no está conectado al Marketplace: los repositorios añadidos desde un enlace no se pudieron comprobar',
     error_title: 'La última comprobación falló',
+    rate_low: 'Quedan pocas solicitudes de GitHub ({n}): las comprobaciones esperan al restablecimiento {d}',
     install_all: 'Actualizar todo ({n})',
     installing_one: 'Instalando… queda {n}',
     installing_many: 'Instalando… quedan {n}',
@@ -230,6 +236,7 @@ const HR_I18N = {
     failed_title: 'Није могуће проверити',
     no_github: 'GitHub није повезан са Marketplace-ом: репозиторијуми додати преко линка нису могли бити проверени',
     error_title: 'Последња провера није успела',
+    rate_low: 'Мало преосталих GitHub захтева ({n}): провере чекају ресетовање {d}',
     install_all: 'Ажурирај све ({n})',
     installing_one: 'Инсталирање… преостало {n}',
     installing_few: 'Инсталирање… преостала {n}',
@@ -282,6 +289,7 @@ const HR_I18N = {
     failed_title: 'Nije moguće proveriti',
     no_github: 'GitHub nije povezan sa Marketplace-om: repozitorijumi dodati preko linka nisu mogli biti provereni',
     error_title: 'Poslednja provera nije uspela',
+    rate_low: 'Malo preostalih GitHub zahteva ({n}): provere čekaju resetovanje {d}',
     install_all: 'Ažuriraj sve ({n})',
     installing_one: 'Instaliranje… preostalo {n}',
     installing_few: 'Instaliranje… preostala {n}',
@@ -333,6 +341,7 @@ const HR_I18N = {
     failed_title: 'Impossibile verificare',
     no_github: 'GitHub non è connesso al Marketplace: i repository aggiunti da un link non sono stati verificati',
     error_title: 'L’ultima verifica non è riuscita',
+    rate_low: 'Poche richieste GitHub rimaste ({n}): i controlli attendono l\'azzeramento {d}',
     install_all: 'Aggiorna tutto ({n})',
     installing_one: 'Installazione… {n} rimanente',
     installing_many: 'Installazione… {n} rimanenti',
@@ -383,6 +392,7 @@ const HR_I18N = {
     failed_title: 'Kon niet worden gecontroleerd',
     no_github: 'GitHub is niet verbonden met de Marketplace: de via een link toegevoegde repository’s konden niet worden gecontroleerd',
     error_title: 'De laatste controle is mislukt',
+    rate_low: 'Weinig GitHub-verzoeken over ({n}): controles wachten tot de limiet reset {d}',
     install_all: 'Alles bijwerken ({n})',
     installing_one: 'Installeren… nog {n}',
     installing_many: 'Installeren… nog {n}',
@@ -433,6 +443,7 @@ const HR_I18N = {
     failed_title: 'Não foi possível verificar',
     no_github: 'O GitHub não está ligado ao Marketplace: os repositórios adicionados por ligação não puderam ser verificados',
     error_title: 'A última verificação falhou',
+    rate_low: 'Poucos pedidos ao GitHub restantes ({n}): as verificações esperam pela reposição {d}',
     install_all: 'Atualizar tudo ({n})',
     installing_one: 'A instalar… falta {n}',
     installing_many: 'A instalar… faltam {n}',
@@ -484,6 +495,7 @@ const HR_I18N = {
     failed_title: 'Nie udało się sprawdzić',
     no_github: 'GitHub nie jest połączony z Marketplace: repozytoria dodane z linku nie mogły zostać sprawdzone',
     error_title: 'Ostatnie sprawdzanie nie powiodło się',
+    rate_low: 'Mało pozostałych żądań GitHub ({n}): sprawdzenia czekają na reset limitu {d}',
     install_all: 'Zaktualizuj wszystko ({n})',
     installing_one: 'Instalowanie… pozostało: {n}',
     installing_many: 'Instalowanie… pozostało: {n}',
@@ -535,6 +547,7 @@ const HR_I18N = {
     failed_title: 'Nu au putut fi verificate',
     no_github: 'GitHub nu este conectat la Marketplace: depozitele adăugate dintr-un link nu au putut fi verificate',
     error_title: 'Ultima verificare a eșuat',
+    rate_low: 'Puține cereri GitHub rămase ({n}): verificările așteaptă resetarea {d}',
     install_all: 'Actualizează tot ({n})',
     installing_one: 'Se instalează… mai rămâne {n}',
     installing_many: 'Se instalează… rămase: {n}',
@@ -585,6 +598,7 @@ const HR_I18N = {
     failed_title: 'Kunne ikke kontrolleres',
     no_github: 'GitHub er ikke forbundet til Marketplace: repositories tilføjet fra et link kunne ikke tjekkes',
     error_title: 'Den seneste kontrol mislykkedes',
+    rate_low: 'Få GitHub-forespørgsler tilbage ({n}): tjek venter på nulstillingen {d}',
     install_all: 'Opdater alle ({n})',
     installing_one: 'Installerer… {n} tilbage',
     installing_many: 'Installerer… {n} tilbage',
@@ -635,6 +649,7 @@ const HR_I18N = {
     failed_title: 'Kunde inte kontrolleras',
     no_github: 'GitHub är inte anslutet till Marketplace: repositorier som lagts till från en länk kunde inte kontrolleras',
     error_title: 'Den senaste kontrollen misslyckades',
+    rate_low: 'Få GitHub-förfrågningar kvar ({n}): kontroller väntar på återställningen {d}',
     install_all: 'Uppdatera alla ({n})',
     installing_one: 'Installerar… {n} kvar',
     installing_many: 'Installerar… {n} kvar',
@@ -685,6 +700,7 @@ const HR_I18N = {
     failed_title: 'Неуспешна проверка',
     no_github: 'GitHub не е свързан с Marketplace: хранилищата, добавени от връзка, не можаха да бъдат проверени',
     error_title: 'Последната проверка е неуспешна',
+    rate_low: 'Малко оставащи заявки към GitHub ({n}): проверките изчакват нулирането {d}',
     install_all: 'Актуализирай всички ({n})',
     installing_one: 'Инсталиране… остава {n}',
     installing_many: 'Инсталиране… остават {n}',
@@ -735,6 +751,7 @@ const HR_I18N = {
     failed_title: 'Не удалось проверить',
     no_github: 'GitHub не подключён к Marketplace: репозитории, добавленные по ссылке, не удалось проверить',
     error_title: 'Последняя проверка не удалась',
+    rate_low: 'Осталось мало запросов GitHub ({n}): проверки ждут сброса лимита {d}',
     install_all: 'Обновить все ({n})',
     installing_one: 'Установка… осталось: {n}',
     installing_many: 'Установка… осталось: {n}',
@@ -785,6 +802,7 @@ const HR_I18N = {
     failed_title: 'Не вдалося перевірити',
     no_github: 'GitHub не підключено до Marketplace: репозиторії, додані за посиланням, не вдалося перевірити',
     error_title: 'Остання перевірка не вдалася',
+    rate_low: 'Залишилось мало запитів GitHub ({n}): перевірки чекають скидання ліміту {d}',
     install_all: 'Оновити все ({n})',
     installing_one: 'Встановлення… залишилося: {n}',
     installing_many: 'Встановлення… залишилося: {n}',
@@ -835,6 +853,7 @@ const HR_I18N = {
     failed_title: 'Nem sikerült ellenőrizni',
     no_github: 'A GitHub nincs összekötve a Marketplace-szel: a hivatkozásból hozzáadott tárolókat nem lehetett ellenőrizni',
     error_title: 'Az utolsó ellenőrzés sikertelen volt',
+    rate_low: 'Kevés GitHub-kérés maradt ({n}): az ellenőrzések a visszaállításig várnak {d}',
     install_all: 'Összes frissítése ({n})',
     installing_one: 'Telepítés… még {n}',
     installing_many: 'Telepítés… még {n}',
@@ -885,6 +904,7 @@ const HR_I18N = {
     failed_title: 'Nepodarilo sa skontrolovať',
     no_github: 'GitHub nie je pripojený k Marketplace: repozitáre pridané z odkazu sa nepodarilo skontrolovať',
     error_title: 'Posledná kontrola zlyhala',
+    rate_low: 'Zostáva málo požiadaviek GitHub ({n}): kontroly čakajú na vynulovanie {d}',
     install_all: 'Aktualizovať všetko ({n})',
     installing_one: 'Inštaluje sa… zostáva: {n}',
     installing_many: 'Inštaluje sa… zostáva: {n}',
@@ -935,6 +955,7 @@ const HR_I18N = {
     failed_title: 'Nepodařilo se zkontrolovat',
     no_github: 'GitHub není připojen k Marketplace: repozitáře přidané z odkazu se nepodařilo zkontrolovat',
     error_title: 'Poslední kontrola selhala',
+    rate_low: 'Zbývá málo požadavků GitHub ({n}): kontroly čekají na vynulování {d}',
     install_all: 'Aktualizovat vše ({n})',
     installing_one: 'Instalace… zbývá: {n}',
     installing_many: 'Instalace… zbývá: {n}',
@@ -985,6 +1006,7 @@ const HR_I18N = {
     failed_title: 'Ni bilo mogoče preveriti',
     no_github: 'GitHub ni povezan z Marketplace: repozitorijev, dodanih prek povezave, ni bilo mogoče preveriti',
     error_title: 'Zadnje preverjanje ni uspelo',
+    rate_low: 'Ostalo je malo zahtev GitHub ({n}): preverjanja čakajo na ponastavitev {d}',
     install_all: 'Posodobi vse ({n})',
     installing_one: 'Nameščanje… preostalo: {n}',
     installing_many: 'Nameščanje… preostalo: {n}',
@@ -1035,6 +1057,7 @@ const HR_I18N = {
     failed_title: 'Neizdevās pārbaudīt',
     no_github: 'GitHub nav pievienots Marketplace: no saites pievienotās repozitorijas nevarēja pārbaudīt',
     error_title: 'Pēdējā pārbaude neizdevās',
+    rate_low: 'Atlicis maz GitHub pieprasījumu ({n}): pārbaudes gaida atiestatīšanu {d}',
     install_all: 'Atjaunināt visu ({n})',
     installing_one: 'Instalē… atlicis: {n}',
     installing_many: 'Instalē… atlicis: {n}',
@@ -1085,6 +1108,7 @@ const HR_I18N = {
     failed_title: 'Αποτυχία ελέγχου',
     no_github: 'Το GitHub δεν είναι συνδεδεμένο με το Marketplace: τα αποθετήρια που προστέθηκαν από σύνδεσμο δεν ήταν δυνατό να ελεγχθούν',
     error_title: 'Ο τελευταίος έλεγχος απέτυχε',
+    rate_low: 'Λίγα αιτήματα GitHub απομένουν ({n}): οι έλεγχοι περιμένουν τον μηδενισμό {d}',
     install_all: 'Ενημέρωση όλων ({n})',
     installing_one: 'Εγκατάσταση… απομένει {n}',
     installing_many: 'Εγκατάσταση… απομένουν {n}',
@@ -1324,6 +1348,15 @@ class MarketplaceRefreshCard extends HTMLElement {
     return device?.status ? { ...device, updates } : { ...device, status, updates };
   }
 
+  // GitHub's rate limit as the last check read it: a line when it is low enough to hold the checks back (under
+  // 1,500 left: the Marketplace keeps a reserve of 1,000), until it resets. Nothing once reset or unknown.
+  _rateLow(a) {
+    const left = a.rate_limit_remaining;
+    const reset = a.rate_limit_reset && new Date(a.rate_limit_reset).getTime();
+    if (typeof left !== 'number' || left >= MR_RATE_LOW || !reset || reset <= Date.now()) return '';
+    return `<div class="rate"><ha-icon icon="mdi:speedometer-slow"></ha-icon><span>${hrEsc(this._t('rate_low', { n: left, d: this._relative(a.rate_limit_reset) }))}</span></div>`;
+  }
+
   _render() {
     if (!this._config || !this._hass || !this.shadowRoot) return;
     const c = this._config;
@@ -1420,6 +1453,7 @@ class MarketplaceRefreshCard extends HTMLElement {
         </div>
         ${this._confirm ? this._confirmBox(this._installable.length) : ''}
         ${running ? `<div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div>` : ''}
+        ${this._rateLow(a)}
         ${c.show_failed && error ? `<div class="error"><ha-icon icon="mdi:alert-circle-outline"></ha-icon><span><b>${hrEsc(this._t('error_title'))}</b><br>${hrEsc(error)}</span></div>` : ''}
         ${
           // No update: no section (the pill already says "Up to date").
@@ -1647,6 +1681,8 @@ class MarketplaceRefreshCard extends HTMLElement {
                   background: color-mix(in srgb, var(--secondary-text-color) 22%, transparent); }
       .progress span { display: block; height: 100%; border-radius: 2px; background: var(--c); }
 
+      .rate { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 12px; color: var(--secondary-text-color); }
+      .rate ha-icon { --mdc-icon-size: 16px; flex: none; color: var(--warning-color, #ffa600); }
       .error { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; padding: 8px 10px; border-radius: 10px;
                font-size: 12px; line-height: 1.35; color: var(--primary-text-color);
                background: color-mix(in srgb, var(--hr-alert) 12%, var(--secondary-background-color, transparent)); }
