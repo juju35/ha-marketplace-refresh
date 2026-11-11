@@ -93,5 +93,8 @@
     "install_failed": { "message": "Não foi possível instalar {failed}." },
     "install_cancelled": { "message": "As instalações foram canceladas (o Marketplace Refresh foi recarregado ou removido)." },
     "rate_limit_low": { "message": "Não restam pedidos suficientes ao GitHub para verificar todos os repositórios ({remaining} restantes, {needed} necessários): a verificação repete-se depois de o limite ser reposto às {reset}." }
+  },
+  "issues": {
+    "system_hub_installed": { "title": "{name} faz agora parte do System Hub", "description": "O System Hub está configurado neste Home Assistant e executa {name} como um dos seus módulos. Este repositório já não é mantido.\n\nCom ambos configurados, {name} é executado duas vezes e os seus cartões são registados duas vezes. Ative o módulo no System Hub (retoma as definições de {name}) e depois remova {name} e o recurso do seu cartão. Consulte [Migrating]({url})." }
   }
 }

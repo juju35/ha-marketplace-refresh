@@ -93,5 +93,8 @@
     "install_failed": { "message": "Nepodařilo se nainstalovat {failed}." },
     "install_cancelled": { "message": "Instalace byly zrušeny (Marketplace Refresh byl znovu načten nebo odebrán)." },
     "rate_limit_low": { "message": "Nezbývá dost požadavků GitHub na kontrolu všech repozitářů (zbývá {remaining}, potřeba {needed}): kontrola proběhne znovu po vynulování limitu v {reset}." }
+  },
+  "issues": {
+    "system_hub_installed": { "title": "{name} je nyní součástí System Hub", "description": "System Hub je nastaven v tomto Home Assistant a spouští {name} jako jeden ze svých modulů. Tento repozitář se již neudržuje.\n\nKdyž jsou nastaveny oba, {name} běží dvakrát a jeho karty se registrují dvakrát. Zapněte modul v System Hub (převezme nastavení {name}) a poté odeberte {name} a prostředek jeho karty. Viz [Migrating]({url})." }
   }
 }

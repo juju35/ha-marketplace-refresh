@@ -93,5 +93,8 @@
     "install_failed": { "message": "Could not install {failed}." },
     "install_cancelled": { "message": "The installs were cancelled (Marketplace Refresh was reloaded or removed)." },
     "rate_limit_low": { "message": "Not enough GitHub requests left to check every repository ({remaining} left, {needed} needed): the check runs again after the limit resets at {reset}." }
+  },
+  "issues": {
+    "system_hub_installed": { "title": "{name} is now part of System Hub", "description": "System Hub is set up on this Home Assistant and runs {name} as one of its modules. This repository is no longer maintained.\n\nWith both set up, {name} runs twice and its cards are registered twice. Turn the module on in System Hub (it takes over the settings of {name}), then remove {name} and its card resource. See [Migrating]({url})." }
   }
 }

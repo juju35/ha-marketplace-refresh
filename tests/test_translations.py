@@ -9,7 +9,7 @@ import pytest
 TRANSLATIONS = Path(__file__).parent.parent / "custom_components" / "marketplace_refresh" / "translations"
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
 # Proper nouns and brands, kept in Latin script in the Cyrillic translation.
-NAMES = re.compile(r"Marketplace|Refresh|Home Assistant|GitHub")
+NAMES = re.compile(r"System Hub|Marketplace|Refresh|Home Assistant|GitHub")
 
 
 def _load(lang: str) -> dict:

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.7.0 - 2026-11-11
+
+### Deprecated
+- **Marketplace Refresh is now a module of [System Hub](https://github.com/juju35/ha-system-hub)**, and this repository is archived: no more updates here. Turned on in System Hub, the module takes over the settings of Marketplace Refresh. While both are set up, Marketplace Refresh raises a repair in **Settings → Repairs**, as it would otherwise run twice and register its cards twice: remove Marketplace Refresh and its card resource once the module is on. See [Migrating](https://github.com/juju35/ha-system-hub#migrating) ([juju35/ha-system-hub#49](https://github.com/juju35/ha-system-hub/issues/49), thanks @FredM67).
+
 ## 2.6.1 - 2026-11-09
 
 ### Improvements
