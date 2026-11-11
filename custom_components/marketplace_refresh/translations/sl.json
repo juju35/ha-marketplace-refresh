@@ -93,5 +93,8 @@
     "install_failed": { "message": "Ni bilo mogoče namestiti: {failed}." },
     "install_cancelled": { "message": "Nameščanja so bila preklicana (Marketplace Refresh je bil znova naložen ali odstranjen)." },
     "rate_limit_low": { "message": "Ni dovolj preostalih zahtev GitHub za preverjanje vseh repozitorijev (preostalo {remaining}, potrebnih {needed}): preverjanje se ponovi po ponastavitvi omejitve ob {reset}." }
+  },
+  "issues": {
+    "system_hub_installed": { "title": "{name} je zdaj del System Hub", "description": "System Hub je nastavljen v tem Home Assistantu in izvaja {name} kot enega od svojih modulov. Ta repozitorij se ne vzdržuje več.\n\nČe sta nastavljena oba, {name} teče dvakrat, njegove kartice pa so registrirane dvakrat. Vklopite modul v System Hub (prevzame nastavitve {name}), nato odstranite {name} in vir njegove kartice. Glejte [Migrating]({url})." }
   }
 }

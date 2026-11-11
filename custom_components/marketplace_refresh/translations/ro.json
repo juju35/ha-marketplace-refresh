@@ -93,5 +93,8 @@
     "install_failed": { "message": "Nu s-a putut instala {failed}." },
     "install_cancelled": { "message": "Instalările au fost anulate (Marketplace Refresh a fost reîncărcat sau eliminat)." },
     "rate_limit_low": { "message": "Nu au rămas destule cereri GitHub pentru a verifica toate depozitele ({remaining} rămase, {needed} necesare): verificarea se reia după resetarea limitei la {reset}." }
+  },
+  "issues": {
+    "system_hub_installed": { "title": "{name} face acum parte din System Hub", "description": "System Hub este configurat în acest Home Assistant și rulează {name} ca unul dintre modulele sale. Acest depozit nu mai este întreținut.\n\nCu ambele configurate, {name} rulează de două ori, iar cardurile sale sunt înregistrate de două ori. Activează modulul în System Hub (preia setările {name}), apoi elimină {name} și resursa cardului său. Vezi [Migrating]({url})." }
   }
 }

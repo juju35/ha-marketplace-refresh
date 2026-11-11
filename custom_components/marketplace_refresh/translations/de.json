@@ -93,5 +93,8 @@
     "install_failed": { "message": "{failed} konnte nicht installiert werden." },
     "install_cancelled": { "message": "Die Installationen wurden abgebrochen (Marketplace Refresh wurde neu geladen oder entfernt)." },
     "rate_limit_low": { "message": "Nicht genug GitHub-Anfragen übrig, um alle Repositories zu prüfen ({remaining} übrig, {needed} nötig): Die Prüfung läuft erneut, nachdem das Limit um {reset} zurückgesetzt wurde." }
+  },
+  "issues": {
+    "system_hub_installed": { "title": "{name} ist jetzt Teil von System Hub", "description": "System Hub ist in diesem Home Assistant eingerichtet und führt {name} als eines seiner Module aus. Dieses Repository wird nicht mehr gepflegt.\n\nSind beide eingerichtet, läuft {name} doppelt und seine Karten werden doppelt registriert. Aktiviere das Modul in System Hub (es übernimmt die Einstellungen von {name}) und entferne dann {name} und die Ressource seiner Karte. Siehe [Migrating]({url})." }
   }
 }

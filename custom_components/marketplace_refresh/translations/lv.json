@@ -93,5 +93,8 @@
     "install_failed": { "message": "Neizdevās instalēt {failed}." },
     "install_cancelled": { "message": "Instalēšana tika atcelta (Marketplace Refresh tika atkārtoti ielādēts vai noņemts)." },
     "rate_limit_low": { "message": "Nepietiek atlikušo GitHub pieprasījumu visu repozitoriju pārbaudei (atlikuši {remaining}, vajag {needed}): pārbaude atkārtosies pēc limita atiestatīšanas plkst. {reset}." }
+  },
+  "issues": {
+    "system_hub_installed": { "title": "{name} tagad ir daļa no System Hub", "description": "System Hub ir iestatīts šajā Home Assistant un darbina {name} kā vienu no saviem moduļiem. Šī repozitorija vairs netiek uzturēta.\n\nJa ir iestatīti abi, {name} darbojas divreiz un tā kartītes tiek reģistrētas divreiz. Ieslēdziet moduli System Hub (tas pārņem {name} iestatījumus), pēc tam noņemiet {name} un tā kartītes resursu. Skatiet [Migrating]({url})." }
   }
 }
