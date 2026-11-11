@@ -8,6 +8,7 @@ on:
       - "custom_components/**/frontend/**"
       - "scripts/**"
       - "requirements_screenshots.txt"
+      - ".github/workflows/screenshots.yml"
 
 # Protected main is never pushed to: the job commits the refreshed screenshots
 # back onto the pull request's own branch, so they land through the normal merge.
